@@ -1,0 +1,23 @@
+{
+  "name": "@ai-resume-agent/functions",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "netlify functions:serve",
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@netlify/functions": "^2.4.1",
+    "@ai-resume-agent/agent-core": "workspace:*",
+    "@ai-resume-agent/agent-capabilities": "workspace:*",
+    "@ai-resume-agent/ui-bridge": "workspace:*",
+    "openai": "^4.20.1",
+    "@anthropic-ai/sdk": "^0.10.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "typescript": "^5.2.2"
+  }
+}
