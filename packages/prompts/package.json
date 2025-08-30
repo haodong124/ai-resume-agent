@@ -1,0 +1,9 @@
+{
+  "name": "@ai-resume-agent/prompts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "files": [
+    "system/**/*.md",
+    "fewshots/**/*.jsonl"
+  ]
+}
