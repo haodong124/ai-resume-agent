@@ -72,10 +72,9 @@ export class OpenAIClient {
     ]
     
     const response = await this.complete(messages, {
-      temperature: 0.3, // Lower temperature for structured output
+      temperature: 0.3,
     })
     
-    // Extract JSON from response
     const jsonMatch = response.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       throw new Error('No valid JSON found in response')
