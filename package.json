@@ -2,26 +2,14 @@
   "name": "ai-resume-agent",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "npm@10.8.2",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "preview": "turbo run preview",
-    "lint": "turbo run lint",
-    "type-check": "turbo run type-check",
-    "clean": "turbo run clean"
-  },
-  "devDependencies": {
-    "turbo": "^1.10.16",
-    "@types/node": "^20.8.0",
-    "typescript": "^5.2.2"
+    "build": "cd apps/web && npm install && npm run build"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=18.0.0"
   }
 }
