@@ -1,15 +1,18 @@
 import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import LandingPage from './pages/LandingPage'
+import EditorPage from './pages/EditorPage'
+import JobsMatchPage from './pages/JobsMatchPage'
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <h1 className="text-3xl font-bold text-center py-8">
-        AI Resume Agent
-      </h1>
-      <p className="text-center text-gray-600">
-        智能简历制作平台
-      </p>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/editor" element={<EditorPage />} />
+        <Route path="/jobs-match" element={<JobsMatchPage />} />
+      </Routes>
+    </Router>
   )
 }
 
