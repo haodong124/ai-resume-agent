@@ -10,8 +10,6 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@ai-resume-agent/agent-core": "workspace:*",
-    "@ai-resume-agent/ui-bridge": "workspace:*",
     "zod": "^3.22.4"
   },
   "devDependencies": {
