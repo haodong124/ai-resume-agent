@@ -1,117 +1,115 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Sparkles, Target, Download, Zap, Shield } from 'lucide-react'
+import { ArrowRight, MessageSquare, BarChart3, FileDown, Sparkles, CheckCircle, Zap } from 'lucide-react'
 
 export default function LandingPage() {
   const navigate = useNavigate()
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    setIsVisible(true)
+  }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            AI Resume Agent
-          </h1>
-          <p className="text-xl text-gray-600 mb-8">
-            智能简历制作平台 - 让AI帮你打造完美简历
-          </p>
-          
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => navigate('/editor')}
-              className="px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <FileText className="w-5 h-5" />
-              开始制作简历
-            </button>
-            <button
-              onClick={() => navigate('/jobs-match')}
-              className="px-8 py-4 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
-            >
-              <Target className="w-5 h-5" />
-              职位匹配分析
-            </button>
-          </div>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mt-16">
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-              <Sparkles className="w-6 h-6 text-blue-600" />
+    <div className="min-h-screen bg-gradient-to-b from-white to-blue-50/30">
+      {/* 极简导航栏 */}
+      <nav className="absolute top-0 w-full z-10 px-8 py-6">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">AI 智能优化</h3>
-            <p className="text-gray-600">
-              自动优化简历内容，提升ATS通过率，让你的简历脱颖而出
-            </p>
+            <span className="font-semibold text-xl">ResumeAI</span>
           </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-              <Target className="w-6 h-6 text-green-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">职位匹配分析</h3>
-            <p className="text-gray-600">
-              分析简历与目标职位的匹配度，提供精准的优化建议
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-              <Download className="w-6 h-6 text-purple-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">高质量导出</h3>
-            <p className="text-gray-600">
-              支持PDF高清导出，完美兼容各大招聘网站
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
-              <Zap className="w-6 h-6 text-yellow-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">多模板支持</h3>
-            <p className="text-gray-600">
-              5种专业模板，适配不同行业和职位需求
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-              <Shield className="w-6 h-6 text-red-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">隐私保护</h3>
-            <p className="text-gray-600">
-              数据本地存储，确保你的个人信息安全
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-              <FileText className="w-6 h-6 text-indigo-600" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">实时预览</h3>
-            <p className="text-gray-600">
-              编辑即时预览效果，所见即所得
-            </p>
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="mt-16 text-center bg-white rounded-2xl shadow-xl p-12">
-          <h2 className="text-3xl font-bold mb-4">准备好了吗？</h2>
-          <p className="text-xl text-gray-600 mb-8">
-            开始使用AI Resume Agent，让求职更简单
-          </p>
-          <button
-            onClick={() => navigate('/editor')}
-            className="px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all text-lg"
-          >
-            立即开始
+          <button className="text-gray-600 hover:text-gray-900 text-sm">
+            登录
           </button>
         </div>
-      </div>
+      </nav>
+
+      {/* 英雄区 - 绝对核心 */}
+      <section className="relative pt-32 pb-20 px-8">
+        <div className={`max-w-4xl mx-auto text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          {/* 主标题 */}
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
+            对话式AI简历助手
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+              让你的职业生涯脱颖而出
+            </span>
+          </h1>
+
+          {/* 副标题 */}
+          <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+            只需轻松对话，AI即可智能生成、分析并优化您的简历，轻松拿下梦想offer
+          </p>
+
+          {/* CTA按钮 - 超大且突出 */}
+          <button
+            onClick={() => navigate('/workspace')}
+            className="group relative px-10 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-full hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+          >
+            <span className="flex items-center gap-3">
+              开始创作
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </span>
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 blur-xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
+          </button>
+
+          {/* 信任指标 */}
+          <div className="mt-8 flex items-center justify-center gap-8 text-sm text-gray-500">
+            <span className="flex items-center gap-1">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              免费使用
+            </span>
+            <span className="flex items-center gap-1">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              无需注册
+            </span>
+            <span className="flex items-center gap-1">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              5分钟完成
+            </span>
+          </div>
+        </div>
+
+        {/* 背景装饰 */}
+        <div className="absolute top-20 right-10 w-72 h-72 bg-purple-200 rounded-full blur-3xl opacity-20"></div>
+        <div className="absolute bottom-10 left-10 w-96 h-96 bg-blue-200 rounded-full blur-3xl opacity-20"></div>
+      </section>
+
+      {/* 功能亮点 - 极简三栏 */}
+      <section className="py-20 px-8">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-10">
+          <div className={`text-center transition-all duration-700 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <MessageSquare className="w-8 h-8 text-blue-600" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">智能对话引导</h3>
+            <p className="text-gray-600">像朋友一样聊天，轻松填充经历</p>
+          </div>
+
+          <div className={`text-center transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <BarChart3 className="w-8 h-8 text-green-600" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">实时简历分析</h3>
+            <p className="text-gray-600">AI即时评分，提供精准优化建议</p>
+          </div>
+
+          <div className={`text-center transition-all duration-700 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <FileDown className="w-8 h-8 text-purple-600" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">一键导出分享</h3>
+            <p className="text-gray-600">生成专业PDF，直达招聘平台</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 极简页脚 */}
+      <footer className="absolute bottom-0 w-full py-6 text-center text-sm text-gray-400">
+        © 2024 ResumeAI. All rights reserved.
+      </footer>
     </div>
   )
 }
