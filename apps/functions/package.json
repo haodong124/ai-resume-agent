@@ -9,12 +9,11 @@
   },
   "dependencies": {
     "@netlify/functions": "^2.4.1",
-    "@ai-resume-agent/agent-core": "workspace:*",
-    "@ai-resume-agent/agent-capabilities": "workspace:*",
-    "@ai-resume-agent/ui-bridge": "workspace:*",
     "openai": "^4.20.1",
     "@anthropic-ai/sdk": "^0.10.0",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "p-retry": "^5.1.2",
+    "p-queue": "^7.4.1"
   },
   "devDependencies": {
     "@types/node": "^20.8.0",
