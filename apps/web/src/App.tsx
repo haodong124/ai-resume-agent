@@ -1,16 +1,14 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
-import EditorPage from './pages/EditorPage'
-import JobsMatchPage from './pages/JobsMatchPage'
+import WorkspacePage from './pages/WorkspacePage'
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/editor" element={<EditorPage />} />
-        <Route path="/jobs-match" element={<JobsMatchPage />} />
+        <Route path="/workspace" element={<WorkspacePage />} />
       </Routes>
     </Router>
   )
