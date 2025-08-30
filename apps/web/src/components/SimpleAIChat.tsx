@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Sparkles } from 'lucide-react'
+import { callOpenAI } from '../lib/api'
 
 interface Message {
   id: string
@@ -36,21 +37,37 @@ export const SimpleAIChat: React.FC = () => {
     setInput('')
     setIsLoading(true)
     
-    // 模拟AI响应
-    setTimeout(() => {
+    try {
+      // 实际调用OpenAI API
+      const systemPrompt = '你是一个专业的简历优化助手。请根据用户的问题提供简历相关的建议。'
+      const response = await callOpenAI(input, systemPrompt)
+      
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: '这是一个模拟的AI响应。实际功能需要连接到API。',
+        content: response || '抱歉，我暂时无法回答。请检查API配置。',
         timestamp: new Date(),
       }
+      
       setMessages((prev) => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Chat error:', error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: '连接失败。请检查API Key是否正确配置。',
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
   
+  // 组件的其余部分保持不变...
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
+      {/* 保持原有的UI代码 */}
       <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
         <Sparkles className="w-5 h-5" />
         <h3 className="font-semibold">AI 简历助手</h3>
@@ -61,6 +78,9 @@ export const SimpleAIChat: React.FC = () => {
           <div className="text-center text-gray-500 mt-8">
             <Bot className="w-12 h-12 mx-auto mb-3 text-gray-400" />
             <p>你好！我是你的AI简历助手</p>
+            <p className="text-xs mt-2 text-gray-400">
+              {import.meta.env.VITE_OPENAI_API_KEY ? '✅ API已连接' : '❌ API未配置'}
+            </p>
           </div>
         ) : (
           messages.map((message) => (
