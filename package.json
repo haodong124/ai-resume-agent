@@ -2,6 +2,11 @@
   "name": "ai-resume-agent",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "npm@10.8.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
@@ -15,10 +20,6 @@
     "@types/node": "^20.8.0",
     "typescript": "^5.2.2"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
