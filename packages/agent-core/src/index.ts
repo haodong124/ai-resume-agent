@@ -2,6 +2,7 @@ import { LLMRouter } from './llm/router'
 import { ToolExecutor } from './executor/ToolExecutor'
 import { ShortTermMemory } from './memory/ShortTermMemory'
 import { RulePlanner } from './planner/RulePlanner'
+import { AgentResponse, AgentIntent } from './types'
 
 export interface AgentConfig {
   llm: 'openai' | 'anthropic' | 'mock'
@@ -23,34 +24,42 @@ export class AgentCore {
     this.planner = new RulePlanner(this.llm)
   }
   
-  async process(intent: string, context: any) {
-    // 1. 理解意图
-    const plan = await this.planner.plan(intent, context)
-    
-    // 2. 执行计划
-    const results = []
-    for (const step of plan.steps) {
-      const result = await this.executor.execute(step, context)
-      results.push(result)
+  async process(intent: string, context: any): Promise<AgentResponse> {
+    try {
+      // 1. Plan the execution
+      const plan = await this.planner.plan(intent, context)
       
-      // 3. 更新记忆
-      this.memory.add({
-        step: step.name,
-        input: step.input,
-        output: result,
-      })
-    }
-    
-    // 4. 综合结果
-    return this.synthesize(results)
-  }
-  
-  private synthesize(results: any[]) {
-    // 综合所有步骤的结果
-    return {
-      success: true,
-      results,
-      summary: this.llm.summarize(results),
+      // 2. Execute steps
+      const results = []
+      for (const step of plan.steps) {
+        const result = await this.executor.execute(step, context)
+        results.push(result)
+        
+        // 3. Store in memory
+        this.memory.add({
+          step: step.name,
+          input: step.input,
+          output: result
+        })
+      }
+      
+      // 4. Return response
+      return {
+        success: true,
+        results,
+        metadata: {
+          intent,
+          steps: plan.steps.length,
+          strategy: plan.strategy
+        }
+      }
+    } catch (error) {
+      console.error('Agent processing error:', error)
+      return {
+        success: false,
+        results: [],
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
     }
   }
   
@@ -62,3 +71,5 @@ export class AgentCore {
     this.memory.clear()
   }
 }
+
+export * from './types'
