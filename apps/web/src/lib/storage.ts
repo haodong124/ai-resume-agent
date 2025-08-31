@@ -1,4 +1,4 @@
-// 简化的本地存储管理，避免Supabase复杂依赖
+// 简化的本地存储管理，替代复杂的Supabase
 
 export function saveToLocalStorage(key: string, data: any): void {
   try {
@@ -42,4 +42,25 @@ export function checkExportPermission(): { canExport: boolean; currentClicks: nu
     canExport: true, // 简化版本默认允许导出
     currentClicks: 0
   }
+}
+
+// 模拟创建分享链接
+export async function createShareLink(resumeId: string): Promise<string> {
+  return generateShareLink()
+}
+
+// 模拟用户查找
+export async function findOrCreateUser(email: string) {
+  return { id: 'mock-user-id', email }
+}
+
+// 模拟简历保存
+export async function saveResume(userId: string, resumeData: any, template: string) {
+  saveToLocalStorage(`resume_${userId}`, { resumeData, template })
+  return { success: true }
+}
+
+// 模拟简历加载
+export async function loadResume(userId: string) {
+  return loadFromLocalStorage(`resume_${userId}`, null)
 }
