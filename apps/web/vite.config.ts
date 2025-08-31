@@ -2,20 +2,22 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@ai-resume-agent/ui-bridge': path.resolve(__dirname, '../../packages/ui-bridge/src'),
     },
   },
   server: {
     port: 3000,
+    host: true,
     proxy: {
       '/.netlify/functions': {
         target: 'http://localhost:8888',
         changeOrigin: true,
+        secure: false,
       },
     },
   },
@@ -25,10 +27,16 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['lucide-react', 'react-hot-toast'],
           'pdf-vendor': ['html2canvas', 'jspdf'],
+          'store-vendor': ['zustand'],
         },
       },
     },
+    chunkSizeWarningLimit: 1000,
+  },
+  define: {
+    global: 'globalThis',
   },
 })
