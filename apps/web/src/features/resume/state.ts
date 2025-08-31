@@ -1,17 +1,66 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { ResumeData } from '@ai-resume-agent/ui-bridge'
+
+// 简化的类型定义
+export interface PersonalInfo {
+  name?: string
+  email?: string
+  phone?: string
+  location?: string
+  summary?: string
+}
+
+export interface Experience {
+  id?: string
+  company: string
+  position: string
+  startDate: string
+  endDate: string
+  current?: boolean
+  description: string
+}
+
+export interface Education {
+  id?: string
+  school: string
+  degree: string
+  major: string
+  startDate: string
+  endDate: string
+  gpa?: string
+}
+
+export interface Skill {
+  id?: string
+  name: string
+  level: 'beginner' | 'intermediate' | 'advanced' | 'expert'
+  category: 'technical' | 'soft' | 'language' | 'tool'
+}
+
+export interface Project {
+  id?: string
+  name: string
+  description: string
+  technologies: string
+  period: string
+}
+
+export interface ResumeData {
+  personalInfo: PersonalInfo
+  experience: Experience[]
+  education: Education[]
+  skills: Skill[]
+  projects: Project[]
+  certificates: any[]
+  achievements: any[]
+  languages: any[]
+}
 
 interface ResumeState {
   resumeData: ResumeData
   selectedTemplate: string
   isEditing: boolean
   aiSuggestions: string[]
-  exportHistory: Array<{
-    id: string
-    date: Date
-    format: 'pdf' | 'png' | 'docx'
-  }>
   
   // Actions
   updateResumeData: (data: Partial<ResumeData>) => void
@@ -29,11 +78,12 @@ export const useResumeStore = create<ResumeState>()(
           email: '',
           phone: '',
           location: '',
+          summary: '',
         },
-        education: [],
         experience: [],
-        projects: [],
+        education: [],
         skills: [],
+        projects: [],
         certificates: [],
         achievements: [],
         languages: [],
@@ -41,7 +91,6 @@ export const useResumeStore = create<ResumeState>()(
       selectedTemplate: 'standard',
       isEditing: false,
       aiSuggestions: [],
-      exportHistory: [],
       
       updateResumeData: (data) =>
         set((state) => ({
