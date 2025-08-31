@@ -1,5 +1,5 @@
 import React from 'react'
-import { ResumeData } from '@ai-resume-agent/ui-bridge'
+import { ResumeData } from '../features/resume/state'
 import { Mail, Phone, MapPin, Calendar } from 'lucide-react'
 
 interface ResumePreviewProps {
@@ -31,7 +31,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
   if (template === 'modern') {
     return (
       <div className="max-w-[210mm] mx-auto bg-white shadow-lg" style={{ minHeight: '297mm' }}>
-        {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8">
           <h1 className="text-3xl font-bold mb-2">{data.personalInfo.name || '您的姓名'}</h1>
           <div className="flex flex-wrap gap-4 text-sm opacity-90">
@@ -62,7 +61,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
         </div>
 
         <div className="p-8 space-y-6">
-          {/* Work Experience */}
           {data.experience.length > 0 && (
             <section>
               <h2 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-blue-500 pb-2">
@@ -94,7 +92,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
             </section>
           )}
 
-          {/* Education */}
           {data.education.length > 0 && (
             <section>
               <h2 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-blue-500 pb-2">
@@ -121,7 +118,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
             </section>
           )}
 
-          {/* Skills */}
           {data.skills.length > 0 && (
             <section>
               <h2 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-blue-500 pb-2">
@@ -150,11 +146,9 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
     )
   }
 
-  // Standard Template (默认)
   return (
     <div className="max-w-[210mm] mx-auto bg-white shadow-lg" style={{ minHeight: '297mm' }}>
       <div className="p-8 space-y-6">
-        {/* Header */}
         <header className="text-center border-b pb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-3">
             {data.personalInfo.name || '您的姓名'}
@@ -181,7 +175,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
           </div>
         </header>
 
-        {/* Summary */}
         {data.personalInfo.summary && (
           <section>
             <h2 className="text-lg font-bold text-gray-800 mb-3 uppercase tracking-wide">
@@ -193,7 +186,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
           </section>
         )}
 
-        {/* Work Experience */}
         {data.experience.length > 0 && (
           <section>
             <h2 className="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wide">
@@ -224,7 +216,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
           </section>
         )}
 
-        {/* Education */}
         {data.education.length > 0 && (
           <section>
             <h2 className="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wide">
@@ -234,15 +225,16 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
               {data.education.map((edu, index) => (
                 <div key={edu.id || index}>
                   <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-gray-800">{edu.degree} - {edu.major}</h3>
-                    <p className="text-gray-600">{edu.school}</p>
-                    {edu.gpa && (
-                      <p className="text-sm text-gray-500">GPA: {edu.gpa}</p>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {edu.startDate} - {edu.endDate}
+                    <div>
+                      <h3 className="font-semibold text-gray-800">{edu.degree} - {edu.major}</h3>
+                      <p className="text-gray-600">{edu.school}</p>
+                      {edu.gpa && (
+                        <p className="text-sm text-gray-500">GPA: {edu.gpa}</p>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {edu.startDate} - {edu.endDate}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -250,7 +242,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
           </section>
         )}
 
-        {/* Skills */}
         {data.skills.length > 0 && (
           <section>
             <h2 className="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wide">
@@ -267,7 +258,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ data, template }) 
           </section>
         )}
 
-        {/* Projects */}
         {data.projects && data.projects.length > 0 && (
           <section>
             <h2 className="text-lg font-bold text-gray-800 mb-4 uppercase tracking-wide">
