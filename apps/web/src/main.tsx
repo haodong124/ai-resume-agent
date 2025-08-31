@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import './index.css'
+import './styles/index.css'  // 修正路径：从 ./index.css 改为 ./styles/index.css
 
 // 错误边界组件
 class ErrorBoundary extends React.Component<
