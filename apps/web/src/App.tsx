@@ -1,8 +1,9 @@
-/import React from 'react'
+import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import { EditorPage } from './pages/EditorPage'
 
-// 创建简单的页面组件，避免构建错误
+// 简单的主页组件
 const HomePage: React.FC = () => {
   const navigate = (path: string) => {
     window.location.href = path
@@ -39,7 +40,6 @@ const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* 特性展示 */}
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center p-6 bg-white rounded-lg shadow-lg">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -69,9 +69,6 @@ const HomePage: React.FC = () => {
     </div>
   )
 }
-
-// 导入现有的 EditorPage
-import { EditorPage } from './pages/EditorPage'
 
 // 简单的职位匹配页面
 const JobsMatchPage: React.FC = () => {
