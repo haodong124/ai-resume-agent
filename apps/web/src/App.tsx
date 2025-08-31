@@ -1,7 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { EditorPage } from './pages/EditorPage'
+import EditorPage from './pages/EditorPage'
 
 // 简单的主页组件
 const HomePage: React.FC = () => {
