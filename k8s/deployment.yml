@@ -1,0 +1,26 @@
+# k8s/deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-resume-agent
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ai-resume-agent
+  template:
+    metadata:
+      labels:
+        app: ai-resume-agent
+    spec:
+      containers:
+      - name: web
+        image: ai-resume-agent:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: database-url
