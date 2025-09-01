@@ -1,0 +1,21 @@
+# Dockerfile.api
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 安装依赖
+COPY package.json package-lock.json ./
+COPY apps/functions/package.json ./apps/functions/
+COPY packages/*/package.json ./packages/*/
+
+RUN npm install
+
+# 复制源码
+COPY . .
+
+# 构建packages
+RUN npm run build:packages
+
+# 启动API服务
+EXPOSE 8000
+CMD ["npm", "run", "dev:functions"]
