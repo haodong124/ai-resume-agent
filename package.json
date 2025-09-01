@@ -1,40 +1,40 @@
 {
-  "name": "ai-resume-agent",
+  "name": "@ai-resume-agent/web",
   "version": "2.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev:web\" \"npm run dev:functions\"",
-    "dev:web": "cd apps/web && npm run dev",
-    "dev:functions": "cd apps/functions && netlify dev",
-    "build": "npm run build:packages && npm run build:web",
-    "build:packages": "npm run build:agent-core && npm run build:agent-capabilities && npm run build:job-recommender && npm run build:career-advisor",
-    "build:agent-core": "cd packages/agent-core && npm run build",
-    "build:agent-capabilities": "cd packages/agent-capabilities && npm run build",
-    "build:job-recommender": "cd packages/job-recommender && npm run build",
-    "build:career-advisor": "cd packages/career-advisor && npm run build",
-    "build:web": "cd apps/web && npm run build",
-    "test": "npm run test:packages",
-    "test:packages": "cd packages/agent-core && npm test",
-    "db:migrate": "node scripts/migrate.js",
-    "db:seed": "node scripts/seed.js",
-    "type-check": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx",
-    "clean": "rm -rf dist && npm run clean:packages",
-    "clean:packages": "cd packages/agent-core && npm run clean && cd ../agent-capabilities && npm run clean"
-  },
-  "devDependencies": {
-    "@types/node": "^20.8.0",
-    "@typescript-eslint/eslint-plugin": "^6.7.0",
-    "@typescript-eslint/parser": "^6.7.0",
-    "concurrently": "^8.2.0",
-    "eslint": "^8.50.0",
-    "typescript": "^5.2.2"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "dotenv": "^16.3.1"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.0",
+    "zustand": "^4.4.1",
+    "@tanstack/react-query": "^5.0.0",
+    "react-hook-form": "^7.45.0",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-dropdown-menu": "^2.0.6",
+    "framer-motion": "^10.16.4",
+    "lucide-react": "^0.263.1",
+    "recharts": "^2.8.0",
+    "axios": "^1.5.0",
+    "@supabase/supabase-js": "^2.39.8",
+    "openai": "^4.28.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.0.2",
+    "vite": "^5.0.0",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.3.3",
+    "@tailwindcss/forms": "^0.5.7"
   }
 }
