@@ -1,15 +1,41 @@
+// package.json (根目录)
 {
   "name": "ai-resume-agent",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "build": "cd apps/web && npm install && npm run build"
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:functions\"",
+    "dev:web": "cd apps/web && npm run dev",
+    "dev:functions": "cd apps/functions && netlify dev",
+    "build": "npm run build:packages && npm run build:web",
+    "build:packages": "npm run build:agent-core && npm run build:agent-capabilities && npm run build:job-recommender && npm run build:career-advisor",
+    "build:agent-core": "cd packages/agent-core && npm run build",
+    "build:agent-capabilities": "cd packages/agent-capabilities && npm run build",
+    "build:job-recommender": "cd packages/job-recommender && npm run build",
+    "build:career-advisor": "cd packages/career-advisor && npm run build",
+    "build:web": "cd apps/web && npm run build",
+    "test": "npm run test:packages",
+    "test:packages": "cd packages/agent-core && npm test",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/seed.js",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
+    "clean": "rm -rf dist && npm run clean:packages",
+    "clean:packages": "cd packages/agent-core && npm run clean && cd ../agent-capabilities && npm run clean"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.50.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
   }
 }
