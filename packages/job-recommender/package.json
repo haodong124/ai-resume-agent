@@ -1,0 +1,25 @@
+// packages/job-recommender/package.json
+{
+  "name": "@ai-resume-agent/job-recommender",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@ai-resume-agent/agent-core": "workspace:*",
+    "@ai-resume-agent/ui-bridge": "workspace:*",
+    "openai": "^4.20.1",
+    "compromise": "^14.10.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "@types/node": "^20.8.0",
+    "vitest": "^0.34.6"
+  }
+}
