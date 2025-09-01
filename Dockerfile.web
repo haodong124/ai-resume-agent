@@ -1,0 +1,23 @@
+# Dockerfile.web
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 复制package文件
+COPY package.json package-lock.json ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/*/package.json ./packages/*/
+
+# 安装依赖
+RUN npm install
+
+# 复制源码
+COPY . .
+
+# 构建应用
+RUN npm run build:packages
+RUN cd apps/web && npm run build
+
+# 启动应用
+EXPOSE 3000
+CMD ["npm", "run", "dev:web"]
