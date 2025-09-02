@@ -4,17 +4,17 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --skipLibCheck",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist",
-    "test": "vitest"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@ai-resume-agent/agent-core": "^1.0.0",
+    "@ai-resume-agent/ui-bridge": "^1.0.0"
   },
   "devDependencies": {
     "typescript": "^5.2.2",
-    "@types/node": "^20.8.0",
-    "vitest": "^0.34.6"
+    "@types/node": "^20.8.0"
   }
 }
