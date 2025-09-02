@@ -1,6 +1,7 @@
 // apps/web/src/features/resume/state.ts
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+// 使用统一的类型定义
 import type { 
   ResumeData, 
   PersonalInfo, 
