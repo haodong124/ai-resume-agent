@@ -152,55 +152,47 @@ export const LearningPathPlanner: React.FC = () => {
   }
 
   const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'course': return '🎥'
+    switch(type) {
+      case 'course': return '🎓'
       case 'book': return '📚'
-      case 'tutorial': return '📝'
-      case 'practice': return '💻'
-      default: return '📖'
+      case 'tutorial': return '💻'
+      case 'practice': return '🔨'
+      default: return '📋'
     }
   }
 
   const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner': return 'text-green-600 bg-green-100'
-      case 'intermediate': return 'text-yellow-600 bg-yellow-100'
-      case 'advanced': return 'text-red-600 bg-red-100'
-      default: return 'text-gray-600 bg-gray-100'
+    switch(difficulty) {
+      case 'beginner': return 'bg-green-100 text-green-700'
+      case 'intermediate': return 'bg-yellow-100 text-yellow-700'
+      case 'advanced': return 'bg-red-100 text-red-700'
+      default: return 'bg-gray-100 text-gray-700'
     }
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
+      {/* 搜索和选择技能 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-          <BookOpen className="w-6 h-6 text-blue-600" />
-          学习路径规划
-        </h2>
+        <h3 className="text-lg font-semibold mb-4">选择学习技能</h3>
         
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">选择要学习的技能</label>
-            <div className="flex gap-2 mb-4">
-              <select
-                value={selectedSkill}
-                onChange={(e) => setSelectedSkill(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-              >
-                <option value="">选择技能...</option>
-                {popularSkills.map(skill => (
-                  <option key={skill} value={skill}>{skill}</option>
-                ))}
-              </select>
-              
-              <button
-                onClick={() => generateLearningPath(selectedSkill)}
-                disabled={!selectedSkill || loading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading ? '生成中...' : '生成路径'}
-              </button>
-            </div>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={selectedSkill}
+              onChange={(e) => setSelectedSkill(e.target.value)}
+              placeholder="输入想要学习的技能..."
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              onClick={() => generateLearningPath(selectedSkill)}
+              disabled={!selectedSkill || loading}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loading && <span className="animate-spin">⏳</span>}
+              {loading ? '生成中...' : '生成路径'}
+            </button>
           </div>
           
           <div className="flex flex-wrap gap-2">
@@ -240,38 +232,33 @@ export const LearningPathPlanner: React.FC = () => {
               
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">
-                  {Math.round((learningPath.milestones.filter(m => m.completed).length / learningPath.milestones.length) * 100)}%
+                  {learningPath.milestones.filter(m => m.completed).length}/{learningPath.milestones.length}
                 </div>
-                <div className="text-sm text-gray-600">完成进度</div>
+                <div className="text-sm text-gray-500">里程碑完成</div>
               </div>
             </div>
-
-            {/* 前置要求 */}
+            
             {learningPath.prerequisites.length > 0 && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-medium text-yellow-800 mb-2">前置要求</h4>
-                <div className="flex flex-wrap gap-2">
-                  {learningPath.prerequisites.map((prereq, index) => (
-                    <span key={index} className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-sm">
-                      {prereq}
-                    </span>
-                  ))}
-                </div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <span className="font-medium text-yellow-800">前置要求：</span>
+                <span className="text-yellow-700">{learningPath.prerequisites.join(', ')}</span>
               </div>
             )}
           </div>
 
-          {/* 学习里程碑 */}
+          {/* 里程碑列表 */}
           <div className="space-y-4">
             {learningPath.milestones.map((milestone, index) => (
-              <div key={milestone.id} className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="flex items-start gap-4">
+              <div key={milestone.id} className={`bg-white rounded-lg border ${
+                milestone.completed ? 'border-green-300 bg-green-50' : 'border-gray-200'
+              } p-6`}>
+                <div className="flex gap-4">
                   <button
                     onClick={() => toggleMilestone(milestone.id)}
-                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition ${
-                      milestone.completed
-                        ? 'bg-green-600 border-green-600 text-white'
-                        : 'border-gray-300 hover:border-green-500'
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      milestone.completed 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-gray-200 text-gray-600'
                     }`}
                   >
                     {milestone.completed ? (
@@ -305,7 +292,7 @@ export const LearningPathPlanner: React.FC = () => {
                                 <span className="text-lg">{getResourceIcon(resource.type)}</span>
                                 <span className="font-medium text-sm">{resource.title}</span>
                               </div>
-                              
+                              <a
                                 href={resource.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
