@@ -3,15 +3,15 @@ import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   ArrowLeft, Save, Download, Eye, EyeOff, Sparkles, 
-  ChevronDown, Loader2, BarChart3, Target
+  ChevronDown, Loader2, BarChart3, Target, MessageSquare
 } from 'lucide-react'
 import { useResumeStore } from '../features/resume/state'
 import ResumeEditor from '../components/ResumeEditor'
 import ResumeAnalyzer from '../components/ResumeAnalyzer'
 import JobMatchAnalysis from '../components/JobMatchAnalysis'
+import AIAssistant from '../components/AIAssistant'
 import toast from 'react-hot-toast'
 
-// 动态导入模板
 const StandardTemplate = lazy(() => import('../components/templates/StandardTemplate'))
 const AmericanBusinessTemplate = lazy(() => import('../components/templates/AmericanBusinessTemplate'))
 
@@ -23,10 +23,7 @@ const TEMPLATES = {
 const EditorPage: React.FC = () => {
   const navigate = useNavigate()
   const { resumeData, selectedTemplate, setTemplate } = useResumeStore()
-  const [showPreview, setShowPreview] = useState(true)
-  const [showAnalyzer, setShowAnalyzer] = useState(false)
-  const [showJobMatch, setShowJobMatch] = useState(false)
-  const [rightPanelContent, setRightPanelContent] = useState<'preview' | 'analyzer' | 'jobmatch'>('preview')
+  const [rightPanelContent, setRightPanelContent] = useState<'preview' | 'analyzer' | 'jobmatch' | 'ai'>('preview')
   const [isSaving, setIsSaving] = useState(false)
 
   const handleSave = async () => {
@@ -76,6 +73,13 @@ const EditorPage: React.FC = () => {
 
   const SelectedTemplate = TEMPLATES[selectedTemplate as keyof typeof TEMPLATES]?.component || StandardTemplate
 
+  const panelButtons = [
+    { id: 'preview', icon: Eye, title: '预览', color: 'blue' },
+    { id: 'analyzer', icon: BarChart3, title: '分析', color: 'green' },
+    { id: 'jobmatch', icon: Target, title: '匹配', color: 'purple' },
+    { id: 'ai', icon: MessageSquare, title: 'AI助手', color: 'orange' }
+  ]
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* 顶部导航栏 */}
@@ -110,36 +114,26 @@ const EditorPage: React.FC = () => {
 
             <div className="w-px h-6 bg-gray-300" />
 
-            {/* 右侧面板切换 */}
-            <button
-              onClick={() => setRightPanelContent('preview')}
-              className={`p-2 rounded-lg transition ${
-                rightPanelContent === 'preview' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
-              }`}
-              title="预览"
-            >
-              <Eye className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={() => setRightPanelContent('analyzer')}
-              className={`p-2 rounded-lg transition ${
-                rightPanelContent === 'analyzer' ? 'bg-green-100 text-green-600' : 'hover:bg-gray-100'
-              }`}
-              title="简历分析"
-            >
-              <BarChart3 className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={() => setRightPanelContent('jobmatch')}
-              className={`p-2 rounded-lg transition ${
-                rightPanelContent === 'jobmatch' ? 'bg-purple-100 text-purple-600' : 'hover:bg-gray-100'
-              }`}
-              title="职位匹配"
-            >
-              <Target className="w-5 h-5" />
-            </button>
+            {/* 右侧面板切换按钮 */}
+            <div className="flex gap-1">
+              {panelButtons.map((button) => {
+                const Icon = button.icon
+                return (
+                  <button
+                    key={button.id}
+                    onClick={() => setRightPanelContent(button.id as any)}
+                    className={`p-2 rounded-lg transition ${
+                      rightPanelContent === button.id 
+                        ? `bg-${button.color}-100 text-${button.color}-600` 
+                        : 'hover:bg-gray-100'
+                    }`}
+                    title={button.title}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </button>
+                )
+              })}
+            </div>
 
             <div className="w-px h-6 bg-gray-300" />
 
@@ -172,44 +166,46 @@ const EditorPage: React.FC = () => {
         </div>
 
         {/* 右侧面板 */}
-        <div className="w-1/2 bg-white overflow-y-auto">
-          <div className="p-6">
-            {rightPanelContent === 'preview' && (
-              <>
-                <div className="mb-4 text-center">
-                  <h2 className="text-lg font-semibold text-gray-700">简历预览</h2>
-                </div>
-                
-                <div id="resume-preview" className="bg-white">
-                  <Suspense fallback={
-                    <div className="flex items-center justify-center h-64">
-                      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                    </div>
-                  }>
-                    <SelectedTemplate resumeData={resumeData} isPreview={true} />
-                  </Suspense>
-                </div>
-              </>
-            )}
+        <div className="w-1/2 bg-white overflow-hidden flex flex-col">
+          {rightPanelContent === 'preview' && (
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="mb-4 text-center">
+                <h2 className="text-lg font-semibold text-gray-700">简历预览</h2>
+              </div>
+              
+              <div id="resume-preview" className="bg-white">
+                <Suspense fallback={
+                  <div className="flex items-center justify-center h-64">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                  </div>
+                }>
+                  <SelectedTemplate resumeData={resumeData} isPreview={true} />
+                </Suspense>
+              </div>
+            </div>
+          )}
 
-            {rightPanelContent === 'analyzer' && (
-              <>
-                <div className="mb-4 text-center">
-                  <h2 className="text-lg font-semibold text-gray-700">简历分析</h2>
-                </div>
-                <ResumeAnalyzer />
-              </>
-            )}
+          {rightPanelContent === 'analyzer' && (
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="mb-4 text-center">
+                <h2 className="text-lg font-semibold text-gray-700">简历分析</h2>
+              </div>
+              <ResumeAnalyzer />
+            </div>
+          )}
 
-            {rightPanelContent === 'jobmatch' && (
-              <>
-                <div className="mb-4 text-center">
-                  <h2 className="text-lg font-semibold text-gray-700">职位匹配分析</h2>
-                </div>
-                <JobMatchAnalysis />
-              </>
-            )}
-          </div>
+          {rightPanelContent === 'jobmatch' && (
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="mb-4 text-center">
+                <h2 className="text-lg font-semibold text-gray-700">职位匹配分析</h2>
+              </div>
+              <JobMatchAnalysis />
+            </div>
+          )}
+
+          {rightPanelContent === 'ai' && (
+            <AIAssistant />
+          )}
         </div>
       </div>
     </div>
