@@ -1,14 +1,15 @@
-// apps/web/src/App.tsx (完整版)
+// apps/web/src/App.tsx (最终完整版)
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { MessageSquare, Award, Briefcase, User } from 'lucide-react'
+import { MessageSquare, Award, Briefcase, User, BookOpen } from 'lucide-react'
 
 // 页面组件
 import EditorPage from './pages/EditorPage'
 import JobsPage from './pages/JobsPage'
 import CareerChatPage from './pages/CareerChatPage'
 import InterviewPage from './pages/InterviewPage'
+import SkillsPage from './pages/SkillsPage'
 
 // 主页组件
 const HomePage: React.FC = () => {
@@ -16,91 +17,144 @@ const HomePage: React.FC = () => {
     window.location.href = path
   }
 
+  const features = [
+    {
+      path: '/editor',
+      icon: User,
+      title: '简历编辑器',
+      description: '智能简历制作工具',
+      color: 'purple',
+      features: ['AI内容优化', '多种模板', '实时预览', 'PDF导出']
+    },
+    {
+      path: '/jobs',
+      icon: Briefcase,
+      title: '职位推荐',
+      description: 'AI智能职位匹配',
+      color: 'blue',
+      features: ['智能匹配', '匹配分析', '技能差距', '申请建议']
+    },
+    {
+      path: '/career-chat',
+      icon: MessageSquare,
+      title: '职业咨询',
+      description: 'AI职业顾问服务',
+      color: 'green',
+      features: ['职业规划', '面试准备', '求职指导', '24/7在线']
+    },
+    {
+      path: '/interview',
+      icon: Award,
+      title: '模拟面试',
+      description: 'AI面试练习平台',
+      color: 'orange',
+      features: ['真实场景', '即时反馈', '多种题型', '能力评估']
+    },
+    {
+      path: '/skills',
+      icon: BookOpen,
+      title: '技能发展',
+      description: '个性化学习路径',
+      color: 'indigo',
+      features: ['技能推荐', '学习规划', '进度跟踪', '资源推荐']
+    }
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-        <div className="text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            让 <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">AI</span> 帮你制作
-            <br />完美简历
+        <div className="text-center mb-16">
+          <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8">
+            让 <span className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">AI</span> 助力
+            <br />你的职场之路
           </h1>
           
-          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
-            智能优化内容，精准匹配职位，提升面试机会。
-            让每一份简历都成为你职场成功的敲门砖。
+          <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
+            从简历制作到职业规划，从技能提升到面试准备
+            <br />
+            一站式AI职业发展平台，让每一步都更精准
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => navigate('/editor')}
-              className="group p-6 bg-white rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all text-lg font-semibold"
             >
-              <div className="w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                <User className="w-6 h-6 text-purple-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">简历编辑器</h3>
-              <p className="text-gray-600 text-sm">制作专业简历</p>
-            </button>
-            
-            <button
-              onClick={() => navigate('/jobs')}
-              className="group p-6 bg-white rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-            >
-              <div className="w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                <Briefcase className="w-6 h-6 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">职位推荐</h3>
-              <p className="text-gray-600 text-sm">AI智能匹配</p>
+              开始制作简历
             </button>
             
             <button
               onClick={() => navigate('/career-chat')}
-              className="group p-6 bg-white rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-purple-600 hover:text-purple-600 transition-all text-lg font-semibold"
             >
-              <div className="w-12 h-12 bg-green-100 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                <MessageSquare className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">职业咨询</h3>
-              <p className="text-gray-600 text-sm">AI职业顾问</p>
-            </button>
-            
-            <button
-              onClick={() => navigate('/interview')}
-              className="group p-6 bg-white rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-            >
-              <div className="w-12 h-12 bg-orange-100 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-                <Award className="w-6 h-6 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">模拟面试</h3>
-              <p className="text-gray-600 text-sm">面试练习</p>
+              AI职业咨询
             </button>
           </div>
+        </div>
 
-          {/* 功能特色 */}
-          <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl">🤖</span>
+        {/* 功能卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 mb-20">
+          {features.map((feature) => {
+            const Icon = feature.icon
+            return (
+              <div
+                key={feature.path}
+                onClick={() => navigate(feature.path)}
+                className="group cursor-pointer"
+              >
+                <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 p-6 h-full">
+                  <div className={`w-14 h-14 bg-${feature.color}-100 rounded-xl mx-auto mb-6 flex items-center justify-center group-hover:bg-${feature.color}-200 transition-colors`}>
+                    <Icon className={`w-7 h-7 text-${feature.color}-600`} />
+                  </div>
+                  
+                  <h3 className="text-xl font-semibold mb-3 text-center">{feature.title}</h3>
+                  <p className="text-gray-600 text-sm text-center mb-4">{feature.description}</p>
+                  
+                  <div className="space-y-2">
+                    {feature.features.map((feat, index) => (
+                      <div key={index} className="flex items-center text-xs text-gray-500">
+                        <div className={`w-1.5 h-1.5 bg-${feature.color}-400 rounded-full mr-2`}></div>
+                        {feat}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold mb-2">AI智能优化</h3>
-              <p className="text-gray-600">自动分析并优化简历内容，提高通过率</p>
+            )
+          })}
+        </div>
+
+        {/* 特色介绍 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto mb-6 flex items-center justify-center">
+              <span className="text-3xl">🤖</span>
             </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl">🎯</span>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">精准匹配</h3>
-              <p className="text-gray-600">基于简历内容推荐最适合的职位机会</p>
+            <h3 className="text-2xl font-semibold mb-4">AI智能优化</h3>
+            <p className="text-gray-600 leading-relaxed">
+              基于大语言模型的内容优化，自动分析简历质量，提供个性化改进建议，让每份简历都脱颖而出
+            </p>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-2xl mx-auto mb-6 flex items-center justify-center">
+              <span className="text-3xl">🎯</span>
             </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl">📈</span>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">职业规划</h3>
-              <p className="text-gray-600">提供个性化的职业发展建议和指导</p>
+            <h3 className="text-2xl font-semibold mb-4">精准匹配</h3>
+            <p className="text-gray-600 leading-relaxed">
+              智能分析职位需求与个人背景，计算匹配度评分，识别技能差距，提供针对性的优化方案
+            </p>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl mx-auto mb-6 flex items-center justify-center">
+              <span className="text-3xl">📈</span>
             </div>
+            <h3 className="text-2xl font-semibold mb-4">全程指导</h3>
+            <p className="text-gray-600 leading-relaxed">
+              从技能规划到面试准备，提供全方位职业发展指导，制定个性化学习路径，助力职业成长
+            </p>
           </div>
         </div>
       </div>
@@ -118,6 +172,7 @@ function App() {
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/career-chat" element={<CareerChatPage />} />
           <Route path="/interview" element={<InterviewPage />} />
+          <Route path="/skills" element={<SkillsPage />} />
         </Routes>
         
         <Toaster
@@ -127,6 +182,20 @@ function App() {
             style: {
               background: '#363636',
               color: '#fff',
+              borderRadius: '12px',
+              fontSize: '14px'
+            },
+            success: {
+              iconTheme: {
+                primary: '#10B981',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#EF4444',
+                secondary: '#fff',
+              },
             },
           }}
         />
