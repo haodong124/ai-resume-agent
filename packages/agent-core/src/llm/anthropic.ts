@@ -1,3 +1,4 @@
+// packages/agent-core/src/llm/anthropic.ts
 import Anthropic from '@anthropic-ai/sdk'
 
 export interface LLMConfig {
@@ -28,26 +29,37 @@ export class AnthropicClient {
     messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
     options?: Partial<LLMConfig>
   ): Promise<string> {
-    // Convert messages format for Anthropic
-    const systemMessage = messages.find(m => m.role === 'system')?.content || ''
-    const anthropicMessages = messages
-      .filter(m => m.role !== 'system')
-      .map(m => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content
-      }))
-    
-    const response = await this.client.messages.create({
-      model: options?.model || this.config.model!,
-      system: systemMessage,
-      messages: anthropicMessages,
-      max_tokens: options?.maxTokens || this.config.maxTokens!,
-      temperature: options?.temperature || this.config.temperature,
-    })
-    
-    return response.content[0].type === 'text' 
-      ? response.content[0].text 
-      : ''
+    try {
+      // Convert messages format for Anthropic
+      const systemMessage = messages.find(m => m.role === 'system')?.content || ''
+      const anthropicMessages = messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content
+        }))
+      
+      const response = await this.client.messages.create({
+        model: options?.model || this.config.model!,
+        system: systemMessage,
+        messages: anthropicMessages,
+        max_tokens: options?.maxTokens || this.config.maxTokens!,
+        temperature: options?.temperature || this.config.temperature,
+      })
+      
+      // Handle response content
+      if (response.content && response.content.length > 0) {
+        const firstContent = response.content[0]
+        if ('text' in firstContent) {
+          return firstContent.text
+        }
+      }
+      
+      return ''
+    } catch (error) {
+      console.error('Anthropic API error:', error)
+      throw new Error('Failed to get response from Anthropic API')
+    }
   }
   
   async generateJSON(prompt: string, schema: any, systemPrompt?: string): Promise<any> {
@@ -66,11 +78,17 @@ export class AnthropicClient {
       temperature: 0.3,
     })
     
+    // Extract JSON from response
     const jsonMatch = response.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       throw new Error('No valid JSON found in response')
     }
     
-    return JSON.parse(jsonMatch[0])
+    try {
+      return JSON.parse(jsonMatch[0])
+    } catch (error) {
+      console.error('Failed to parse JSON:', jsonMatch[0])
+      throw new Error('Invalid JSON in response')
+    }
   }
 }
