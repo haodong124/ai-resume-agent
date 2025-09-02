@@ -15,6 +15,7 @@ import {
 import { useResumeStore } from '../features/resume/state'
 import type { JobRecommendation } from '../types/resume'
 import toast from 'react-hot-toast'
+import JobDetailModal from './JobDetailModal'
 
 export const JobRecommendations: React.FC = () => {
   const { resumeData } = useResumeStore()
@@ -26,6 +27,8 @@ export const JobRecommendations: React.FC = () => {
     jobType: '',
     remote: false
   })
+  const [selectedJob, setSelectedJob] = useState<JobRecommendation | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
 
   const fetchRecommendations = async () => {
     if (!resumeData.personalInfo.name) {
@@ -75,7 +78,7 @@ export const JobRecommendations: React.FC = () => {
             { type: 'experience_match', description: '工作经验符合要求', weight: 0.7 }
           ],
           growthPotential: 85,
-          applicationUrl: 'https://jobs.bytedance.com/referral/pc/position'
+          applicationUrl: 'https://jobs.bytedance.com/referral/pc/position  '
         },
         {
           jobId: '2',
@@ -232,17 +235,28 @@ export const JobRecommendations: React.FC = () => {
                     <TrendingUp className="w-4 h-4" />
                     <span className="text-sm font-medium">成长潜力 {job.growthPotential}%</span>
                   </div>
-                  {job.applicationUrl && (
-                    
-                      href={job.applicationUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => {
+                        setSelectedJob(job)
+                        setShowDetailModal(true)
+                      }}
+                      className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50"
                     >
-                      立即申请
-                      <ExternalLink className="w-4 h-4 ml-2" />
-                    </a>
-                  )}
+                      查看详情
+                    </button>
+                    {job.applicationUrl && (
+                      <a
+                        href={job.applicationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        立即申请
+                        <ExternalLink className="w-4 h-4 ml-2" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -303,6 +317,16 @@ export const JobRecommendations: React.FC = () => {
           )}
         </div>
       )}
+      
+      {/* 职位详情模态框 */}
+      <JobDetailModal
+        job={selectedJob}
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false)
+          setSelectedJob(null)
+        }}
+      />
     </div>
   )
 }
