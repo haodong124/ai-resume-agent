@@ -1,112 +1,33 @@
 // apps/web/src/components/ResumeEditor.tsx
-// 修复版本 - 添加必要的类型定义和导出
-
-import { useState } from 'react'
-import { Plus, Trash2, GripVertical, Save, Download } from 'lucide-react'
-import { ExperienceEditor } from './ExperienceEditor'
-import { EducationEditor } from './EducationEditor'
-import { ProjectEditor } from './ProjectEditor'
-import { SkillRecommender } from './SkillRecommender'
-import { ExportModal } from './ExportModal'
+import React, { useState } from 'react'
+import { Plus, Trash2, Save, User, Briefcase, GraduationCap, Award, Code } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useResumeStore } from '../features/resume/state'
 
-// 导出 ResumeData 类型
-export interface ResumeData {
-  personalInfo: {
-    name: string
-    email: string
-    phone: string
-    location: string
-    website?: string
-    linkedin?: string
-    github?: string
-    summary?: string
-  }
-  experience: Experience[]
-  education: Education[]
-  skills: Skill[]
-  projects: Project[]
-  certificates?: Certificate[]
-  achievements?: Achievement[]
-  languages?: Language[]
-}
-
-export interface Experience {
-  id: string
-  company: string
-  position: string
-  duration: string
-  location?: string
-  description: string
-  achievements?: string[]
-}
-
-export interface Education {
-  id: string
-  school: string
-  degree: string
-  field: string
-  duration: string
-  location?: string
-  gpa?: string
-  honors?: string[]
-}
-
-export interface Skill {
-  id: string
-  name: string
-  level: 'beginner' | 'intermediate' | 'advanced' | 'expert'
-  category: string
-}
-
-export interface Project {
-  id: string
-  name: string
-  description: string
-  duration: string
-  technologies: string[]
-  link?: string
-  achievements?: string[]
-}
-
-export interface Certificate {
-  id: string
-  name: string
-  issuer: string
-  date: string
-  link?: string
-}
-
-export interface Achievement {
-  id: string
-  title: string
-  description: string
-  date: string
-}
-
-export interface Language {
-  id: string
-  name: string
-  proficiency: 'basic' | 'conversational' | 'professional' | 'native'
-}
-
-interface ResumeEditorProps {
-  selectedTemplate: string
-  onTemplateChange: (template: string) => void
-}
-
-export const ResumeEditor: React.FC<ResumeEditorProps> = () => {
-  const { resumeData, updateResumeData } = useResumeStore()
+export const ResumeEditor: React.FC = () => {
+  const { 
+    resumeData, 
+    updatePersonalInfo,
+    addExperience,
+    updateExperience, 
+    removeExperience,
+    addEducation,
+    updateEducation,
+    removeEducation,
+    addProject,
+    updateProject,
+    removeProject,
+    addSkill,
+    updateSkill,
+    removeSkill
+  } = useResumeStore()
+  
   const [activeSection, setActiveSection] = useState<string>('personal')
-  const [showExportModal, setShowExportModal] = useState(false)
-  const [showSkillRecommender, setShowSkillRecommender] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      // 保存逻辑
       localStorage.setItem('resumeData', JSON.stringify(resumeData))
       toast.success('简历已保存')
     } catch (error) {
@@ -116,332 +37,506 @@ export const ResumeEditor: React.FC<ResumeEditorProps> = () => {
     }
   }
 
-  const addExperience = () => {
-    const newExperience: Experience = {
-      id: Date.now().toString(),
-      company: '',
-      position: '',
-      duration: '',
-      description: '',
-      achievements: []
-    }
-    updateResumeData({
-      experience: [...resumeData.experience, newExperience]
-    })
-  }
-
-  const updateExperience = (index: number, field: string, value: any) => {
-    const updatedExperience = [...resumeData.experience]
-    updatedExperience[index] = {
-      ...updatedExperience[index],
-      [field]: value
-    }
-    updateResumeData({ experience: updatedExperience })
-  }
-
-  const removeExperience = (index: number) => {
-    const updatedExperience = resumeData.experience.filter((_, i: number) => i !== index)
-    updateResumeData({ experience: updatedExperience })
-  }
-
-  const addEducation = () => {
-    const newEducation: Education = {
-      id: Date.now().toString(),
-      school: '',
-      degree: '',
-      field: '',
-      duration: '',
-      honors: []
-    }
-    updateResumeData({
-      education: [...resumeData.education, newEducation]
-    })
-  }
-
-  const updateEducation = (index: number, field: string, value: any) => {
-    const updatedEducation = [...resumeData.education]
-    updatedEducation[index] = {
-      ...updatedEducation[index],
-      [field]: value
-    }
-    updateResumeData({ education: updatedEducation })
-  }
-
-  const removeEducation = (index: number) => {
-    const updatedEducation = resumeData.education.filter((_, i: number) => i !== index)
-    updateResumeData({ education: updatedEducation })
-  }
-
-  const addSkill = () => {
-    const newSkill: Skill = {
-      id: Date.now().toString(),
-      name: '',
-      level: 'intermediate',
-      category: 'Technical'
-    }
-    updateResumeData({
-      skills: [...resumeData.skills, newSkill]
-    })
-  }
-
-  const updateSkill = (index: number, field: string, value: any) => {
-    const updatedSkills = [...resumeData.skills]
-    updatedSkills[index] = {
-      ...updatedSkills[index],
-      [field]: value
-    }
-    updateResumeData({ skills: updatedSkills })
-  }
-
-  const removeSkill = (index: number) => {
-    const updatedSkills = resumeData.skills.filter((_, i: number) => i !== index)
-    updateResumeData({ skills: updatedSkills })
-  }
+  const sections = [
+    { id: 'personal', name: '个人信息', icon: User },
+    { id: 'experience', name: '工作经历', icon: Briefcase },
+    { id: 'education', name: '教育背景', icon: GraduationCap },
+    { id: 'skills', name: '专业技能', icon: Code },
+    { id: 'projects', name: '项目经验', icon: Award },
+  ]
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      {/* 顶部工具栏 */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">简历编辑器</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Save className="h-4 w-4" />
-            {isSaving ? '保存中...' : '保存'}
-          </button>
-          <button
-            onClick={() => setShowExportModal(true)}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            导出
-          </button>
+    <div className="h-full flex">
+      {/* 左侧导航 */}
+      <div className="w-64 bg-white border-r border-gray-200 overflow-y-auto">
+        <div className="p-4">
+          <h2 className="text-lg font-semibold mb-4">编辑简历</h2>
+          <nav className="space-y-2">
+            {sections.map((section) => {
+              const Icon = section.icon
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`w-full flex items-center px-3 py-2 text-left rounded-lg transition-colors ${
+                    activeSection === section.id
+                      ? 'bg-blue-50 text-blue-600 border-blue-200'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 mr-3" />
+                  {section.name}
+                </button>
+              )
+            })}
+          </nav>
+          
+          <div className="mt-6">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? '保存中...' : '保存'}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 分段导航 */}
-      <div className="flex gap-2 mb-6 border-b">
-        {['personal', 'experience', 'education', 'skills', 'projects'].map((section) => (
-          <button
-            key={section}
-            onClick={() => setActiveSection(section)}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeSection === section
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            {section === 'personal' && '个人信息'}
-            {section === 'experience' && '工作经历'}
-            {section === 'education' && '教育背景'}
-            {section === 'skills' && '专业技能'}
-            {section === 'projects' && '项目经验'}
-          </button>
-        ))}
-      </div>
-
-      {/* 内容区域 */}
-      <div className="space-y-6">
-        {/* 个人信息 */}
-        {activeSection === 'personal' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">个人信息</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="姓名"
-                value={resumeData.personalInfo.name}
-                onChange={(e) => updateResumeData({
-                  personalInfo: { ...resumeData.personalInfo, name: e.target.value }
-                })}
-                className="px-3 py-2 border rounded-lg"
-              />
-              <input
-                type="email"
-                placeholder="邮箱"
-                value={resumeData.personalInfo.email}
-                onChange={(e) => updateResumeData({
-                  personalInfo: { ...resumeData.personalInfo, email: e.target.value }
-                })}
-                className="px-3 py-2 border rounded-lg"
-              />
-              <input
-                type="tel"
-                placeholder="电话"
-                value={resumeData.personalInfo.phone}
-                onChange={(e) => updateResumeData({
-                  personalInfo: { ...resumeData.personalInfo, phone: e.target.value }
-                })}
-                className="px-3 py-2 border rounded-lg"
-              />
-              <input
-                type="text"
-                placeholder="地址"
-                value={resumeData.personalInfo.location}
-                onChange={(e) => updateResumeData({
-                  personalInfo: { ...resumeData.personalInfo, location: e.target.value }
-                })}
-                className="px-3 py-2 border rounded-lg"
-              />
+      {/* 右侧编辑区域 */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
+          {/* 个人信息 */}
+          {activeSection === 'personal' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold">个人信息</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">姓名 *</label>
+                  <input
+                    type="text"
+                    value={resumeData.personalInfo.name || ''}
+                    onChange={(e) => updatePersonalInfo({ name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="请输入您的姓名"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">职位目标</label>
+                  <input
+                    type="text"
+                    value={resumeData.personalInfo.title || ''}
+                    onChange={(e) => updatePersonalInfo({ title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="如：前端开发工程师"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">邮箱 *</label>
+                  <input
+                    type="email"
+                    value={resumeData.personalInfo.email || ''}
+                    onChange={(e) => updatePersonalInfo({ email: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="your@email.com"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">电话 *</label>
+                  <input
+                    type="tel"
+                    value={resumeData.personalInfo.phone || ''}
+                    onChange={(e) => updatePersonalInfo({ phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="138xxxx8888"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">所在城市</label>
+                  <input
+                    type="text"
+                    value={resumeData.personalInfo.location || ''}
+                    onChange={(e) => updatePersonalInfo({ location: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="如：北京"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">个人网站</label>
+                  <input
+                    type="url"
+                    value={resumeData.personalInfo.website || ''}
+                    onChange={(e) => updatePersonalInfo({ website: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="https://yoursite.com"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">个人简介</label>
+                <textarea
+                  value={resumeData.personalInfo.summary || ''}
+                  onChange={(e) => updatePersonalInfo({ summary: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={4}
+                  placeholder="用2-3句话简洁地介绍自己的专业背景和核心优势..."
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* 工作经历 */}
-        {activeSection === 'experience' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">工作经历</h3>
-              <button
-                onClick={addExperience}
-                className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
-              >
-                <Plus className="h-4 w-4" />
-                添加经历
-              </button>
-            </div>
-            {resumeData.experience.map((exp: Experience, index: number) => (
-              <ExperienceEditor
-                key={exp.id}
-                experience={exp}
-                onChange={(field, value) => updateExperience(index, field, value)}
-                onRemove={() => removeExperience(index)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* 教育背景 */}
-        {activeSection === 'education' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">教育背景</h3>
-              <button
-                onClick={addEducation}
-                className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
-              >
-                <Plus className="h-4 w-4" />
-                添加教育
-              </button>
-            </div>
-            {resumeData.education.map((edu: Education, index: number) => (
-              <EducationEditor
-                key={edu.id}
-                education={edu}
-                onChange={(field, value) => updateEducation(index, field, value)}
-                onRemove={() => removeEducation(index)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* 专业技能 */}
-        {activeSection === 'skills' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">专业技能</h3>
-              <div className="flex gap-2">
+          {/* 工作经历 */}
+          {activeSection === 'experience' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold">工作经历</h3>
                 <button
-                  onClick={() => setShowSkillRecommender(true)}
-                  className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  onClick={addExperience}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-                  AI推荐
+                  <Plus className="w-4 h-4 mr-2" />
+                  添加经历
                 </button>
+              </div>
+              
+              {resumeData.experience.map((exp, index) => (
+                <div key={exp.id || index} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="text-lg font-medium">工作经历 {index + 1}</h4>
+                    <button
+                      onClick={() => removeExperience(index)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">公司名称 *</label>
+                      <input
+                        type="text"
+                        value={exp.company}
+                        onChange={(e) => updateExperience(index, 'company', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="公司名称"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">职位 *</label>
+                      <input
+                        type="text"
+                        value={exp.position}
+                        onChange={(e) => updateExperience(index, 'position', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="职位名称"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">工作时间 *</label>
+                      <input
+                        type="text"
+                        value={exp.duration}
+                        onChange={(e) => updateExperience(index, 'duration', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="2022.01 - 2024.01"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">工作地点</label>
+                      <input
+                        type="text"
+                        value={exp.location || ''}
+                        onChange={(e) => updateExperience(index, 'location', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="北京"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">工作描述 *</label>
+                    <textarea
+                      value={exp.description}
+                      onChange={(e) => updateExperience(index, 'description', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      rows={4}
+                      placeholder="详细描述您在这个职位上的主要工作内容、职责和取得的成果..."
+                    />
+                  </div>
+                </div>
+              ))}
+              
+              {resumeData.experience.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <Briefcase className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>暂无工作经历，点击上方按钮添加</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 教育背景 */}
+          {activeSection === 'education' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold">教育背景</h3>
                 <button
-                  onClick={addSkill}
-                  className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
+                  onClick={addEducation}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="w-4 h-4 mr-2" />
+                  添加教育
+                </button>
+              </div>
+              
+              {resumeData.education.map((edu, index) => (
+                <div key={edu.id || index} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="text-lg font-medium">教育经历 {index + 1}</h4>
+                    <button
+                      onClick={() => removeEducation(index)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">学校名称 *</label>
+                      <input
+                        type="text"
+                        value={edu.school}
+                        onChange={(e) => updateEducation(index, 'school', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="学校名称"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">学历 *</label>
+                      <input
+                        type="text"
+                        value={edu.degree}
+                        onChange={(e) => updateEducation(index, 'degree', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="如：本科"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">专业 *</label>
+                      <input
+                        type="text"
+                        value={edu.major}
+                        onChange={(e) => updateEducation(index, 'major', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="专业名称"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">就读时间 *</label>
+                      <input
+                        type="text"
+                        value={edu.duration}
+                        onChange={(e) => updateEducation(index, 'duration', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="2018.09 - 2022.06"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">GPA</label>
+                      <input
+                        type="text"
+                        value={edu.gpa || ''}
+                        onChange={(e) => updateEducation(index, 'gpa', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="如：3.8/4.0"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {resumeData.education.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <GraduationCap className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>暂无教育背景，点击上方按钮添加</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 项目经验 */}
+          {activeSection === 'projects' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold">项目经验</h3>
+                <button
+                  onClick={addProject}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  添加项目
+                </button>
+              </div>
+              
+              {resumeData.projects.map((project, index) => (
+                <div key={project.id || index} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="text-lg font-medium">项目 {index + 1}</h4>
+                    <button
+                      onClick={() => removeProject(index)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">项目名称 *</label>
+                      <input
+                        type="text"
+                        value={project.name}
+                        onChange={(e) => updateProject(index, 'name', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="项目名称"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">项目时间</label>
+                      <input
+                        type="text"
+                        value={project.duration}
+                        onChange={(e) => updateProject(index, 'duration', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        placeholder="2023.01 - 2023.06"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">技术栈</label>
+                    <input
+                      type="text"
+                      value={Array.isArray(project.technologies) ? project.technologies.join(', ') : project.technologies}
+                      onChange={(e) => updateProject(index, 'technologies', e.target.value.split(', ').filter(t => t.trim()))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="React, Node.js, MongoDB"
+                    />
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">项目链接</label>
+                    <input
+                      type="url"
+                      value={project.link || ''}
+                      onChange={(e) => updateProject(index, 'link', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="https://github.com/yourusername/project"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">项目描述 *</label>
+                    <textarea
+                      value={project.description}
+                      onChange={(e) => updateProject(index, 'description', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      rows={4}
+                      placeholder="详细描述项目背景、您的贡献和取得的成果..."
+                    />
+                  </div>
+                </div>
+              ))}
+              
+              {resumeData.projects.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <Award className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>暂无项目经验，点击上方按钮添加</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 专业技能 */}
+          {activeSection === 'skills' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold">专业技能</h3>
+                <button
+                  onClick={() => addSkill({ name: '', level: 'intermediate', category: '技术技能' })}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
                   添加技能
                 </button>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {resumeData.skills.map((skill: Skill, index: number) => (
-                <div key={skill.id} className="flex items-center gap-2 p-3 border rounded-lg">
-                  <GripVertical className="h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="技能名称"
-                    value={skill.name}
-                    onChange={(e) => updateSkill(index, 'name', e.target.value)}
-                    className="flex-1 px-2 py-1 border rounded"
-                  />
-                  <select
-                    value={skill.level}
-                    onChange={(e) => updateSkill(index, 'level', e.target.value)}
-                    className="px-2 py-1 border rounded"
-                  >
-                    <option value="beginner">初级</option>
-                    <option value="intermediate">中级</option>
-                    <option value="advanced">高级</option>
-                    <option value="expert">专家</option>
-                  </select>
-                  <button
-                    onClick={() => removeSkill(index)}
-                    className="p-1 text-red-600 hover:bg-red-50 rounded"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {resumeData.skills.map((skill, index) => (
+                  <div key={skill.id || index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="font-medium">技能 {index + 1}</h4>
+                      <button
+                        onClick={() => removeSkill(index)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">技能名称 *</label>
+                        <input
+                          type="text"
+                          value={skill.name}
+                          onChange={(e) => updateSkill(index, 'name', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="如：JavaScript"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-1">熟练程度</label>
+                        <select
+                          value={skill.level}
+                          onChange={(e) => updateSkill(index, 'level', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="beginner">初级</option>
+                          <option value="intermediate">中级</option>
+                          <option value="advanced">高级</option>
+                          <option value="expert">专家</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-1">技能分类</label>
+                        <select
+                          value={skill.category}
+                          onChange={(e) => updateSkill(index, 'category', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="技术技能">技术技能</option>
+                          <option value="编程语言">编程语言</option>
+                          <option value="框架工具">框架工具</option>
+                          <option value="软技能">软技能</option>
+                          <option value="语言能力">语言能力</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {resumeData.skills.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <Code className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>暂无专业技能，点击上方按钮添加</p>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        )}
-
-        {/* 项目经验 */}
-        {activeSection === 'projects' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">项目经验</h3>
-              <button className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1">
-                <Plus className="h-4 w-4" />
-                添加项目
-              </button>
-            </div>
-            {resumeData.projects.map((project, index) => (
-              <ProjectEditor
-                key={project.id}
-                project={project}
-                onChange={(field, value) => {
-                  const updated = [...resumeData.projects]
-                  updated[index] = { ...updated[index], [field]: value }
-                  updateResumeData({ projects: updated })
-                }}
-                onRemove={() => {
-                  const updated = resumeData.projects.filter((_, i) => i !== index)
-                  updateResumeData({ projects: updated })
-                }}
-              />
-            ))}
-          </div>
-        )}
+          )}
+        </div>
       </div>
-
-      {/* 导出模态框 */}
-      {showExportModal && (
-        <ExportModal
-          isOpen={showExportModal}
-          onClose={() => setShowExportModal(false)}
-          previewElement={document.querySelector('.resume-preview')}
-        />
-      )}
-
-      {/* 技能推荐器 */}
-      {showSkillRecommender && (
-        <SkillRecommender
-          currentSkills={resumeData.skills}
-          onAddSkill={(skill) => {
-            updateResumeData({
-              skills: [...resumeData.skills, { ...skill, id: Date.now().toString() }]
-            })
-          }}
-          onClose={() => setShowSkillRecommender(false)}
-        />
-      )}
     </div>
   )
 }
