@@ -1,4 +1,4 @@
-```typescript
+// packages/agent-capabilities/src/ResumeContentOptimizer.ts
 import { AgentCore } from '@ai-resume-agent/agent-core'
 import { ResumeData } from '@ai-resume-agent/ui-bridge'
 
