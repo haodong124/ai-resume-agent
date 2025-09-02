@@ -1,41 +1,40 @@
 {
-  "name": "@ai-resume-agent/web",
+  "name": "ai-resume-agent",
   "version": "2.0.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.8.0",
-    "zustand": "^4.4.1",
-    "react-hook-form": "^7.45.0",
-    "@radix-ui/react-dialog": "^1.0.5",
-    "@radix-ui/react-dropdown-menu": "^2.0.6",
-    "framer-motion": "^10.16.4",
-    "lucide-react": "^0.263.1",
-    "recharts": "^2.8.0",
-    "axios": "^1.5.0",
-    "@supabase/supabase-js": "^2.39.8",
-    "openai": "^4.28.0",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.0",
-    "react-hot-toast": "^2.4.1",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1"
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:functions\"",
+    "dev:web": "cd apps/web && npm run dev",
+    "dev:functions": "cd apps/functions && npm run dev",
+    "build": "npm run build:packages && npm run build:apps",
+    "build:web": "npm run build:packages && cd apps/web && npm run build",
+    "build:functions": "npm run build:packages && cd apps/functions && npm run build",
+    "build:packages": "npm run build:agent-core && npm run build:ui-bridge && npm run build:data-connectors && npm run build:job-recommender",
+    "build:apps": "npm run build:web && npm run build:functions",
+    "build:agent-core": "cd packages/agent-core && npm run build",
+    "build:ui-bridge": "cd packages/ui-bridge && npm run build",
+    "build:data-connectors": "cd packages/data-connectors && npm run build",
+    "build:job-recommender": "cd packages/job-recommender && npm run build",
+    "clean": "npm run clean:web && npm run clean:functions && npm run clean:packages",
+    "clean:web": "cd apps/web && rm -rf dist",
+    "clean:functions": "cd apps/functions && rm -rf dist",
+    "clean:packages": "npm run clean:agent-core && npm run clean:ui-bridge && npm run clean:data-connectors && npm run clean:job-recommender",
+    "clean:agent-core": "cd packages/agent-core && rm -rf dist",
+    "clean:ui-bridge": "cd packages/ui-bridge && rm -rf dist",
+    "clean:data-connectors": "cd packages/data-connectors && rm -rf dist",
+    "clean:job-recommender": "cd packages/job-recommender && rm -rf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.2.1",
-    "typescript": "^5.0.2",
-    "vite": "^5.0.0",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.35",
-    "tailwindcss": "^3.3.3",
-    "@tailwindcss/forms": "^0.5.7"
+    "concurrently": "^8.2.2",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }
