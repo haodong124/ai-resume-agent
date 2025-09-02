@@ -9,19 +9,21 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-    include: ['react', 'react-dom'],
+  server: {
+    port: 3000,
+    open: true,
   },
   build: {
-    commonjsOptions: {
-      transformMixedEsModules: true,
-      include: [/node_modules/],
-    },
+    outDir: 'dist',
+    sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: undefined,
-      },
-    },
-  },
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['lucide-react', 'framer-motion'],
+          'pdf-vendor': ['html2canvas', 'jspdf'],
+        }
+      }
+    }
+  }
 })
