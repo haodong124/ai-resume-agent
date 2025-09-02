@@ -1,60 +1,14 @@
+// apps/web/src/features/resume/state.ts
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-
-// 简化的类型定义
-export interface PersonalInfo {
-  name?: string
-  email?: string
-  phone?: string
-  location?: string
-  summary?: string
-}
-
-export interface Experience {
-  id?: string
-  company: string
-  position: string
-  startDate: string
-  endDate: string
-  current?: boolean
-  description: string
-}
-
-export interface Education {
-  id?: string
-  school: string
-  degree: string
-  major: string
-  startDate: string
-  endDate: string
-  gpa?: string
-}
-
-export interface Skill {
-  id?: string
-  name: string
-  level: 'beginner' | 'intermediate' | 'advanced' | 'expert'
-  category: 'technical' | 'soft' | 'language' | 'tool'
-}
-
-export interface Project {
-  id?: string
-  name: string
-  description: string
-  technologies: string
-  period: string
-}
-
-export interface ResumeData {
-  personalInfo: PersonalInfo
-  experience: Experience[]
-  education: Education[]
-  skills: Skill[]
-  projects: Project[]
-  certificates: any[]
-  achievements: any[]
-  languages: any[]
-}
+import type { 
+  ResumeData, 
+  PersonalInfo, 
+  Experience, 
+  Education, 
+  Skill, 
+  Project 
+} from '../../types/resume'
 
 interface ResumeState {
   resumeData: ResumeData
@@ -64,6 +18,19 @@ interface ResumeState {
   
   // Actions
   updateResumeData: (data: Partial<ResumeData>) => void
+  updatePersonalInfo: (info: Partial<PersonalInfo>) => void
+  addExperience: () => void
+  updateExperience: (index: number, field: keyof Experience, value: any) => void
+  removeExperience: (index: number) => void
+  addEducation: () => void
+  updateEducation: (index: number, field: keyof Education, value: any) => void
+  removeEducation: (index: number) => void
+  addProject: () => void
+  updateProject: (index: number, field: keyof Project, value: any) => void
+  removeProject: (index: number) => void
+  addSkill: (skill: Omit<Skill, 'id'>) => void
+  updateSkill: (index: number, field: keyof Skill, value: any) => void
+  removeSkill: (index: number) => void
   setTemplate: (template: string) => void
   addAISuggestion: (suggestion: string) => void
   clearSuggestions: () => void
@@ -95,6 +62,149 @@ export const useResumeStore = create<ResumeState>()(
       updateResumeData: (data) =>
         set((state) => ({
           resumeData: { ...state.resumeData, ...data },
+        })),
+      
+      updatePersonalInfo: (info) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            personalInfo: { ...state.resumeData.personalInfo, ...info }
+          }
+        })),
+      
+      addExperience: () =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            experience: [
+              ...state.resumeData.experience,
+              {
+                id: Date.now().toString(),
+                company: '',
+                position: '',
+                duration: '',
+                description: '',
+                achievements: []
+              }
+            ]
+          }
+        })),
+      
+      updateExperience: (index, field, value) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            experience: state.resumeData.experience.map((exp, i) =>
+              i === index ? { ...exp, [field]: value } : exp
+            )
+          }
+        })),
+      
+      removeExperience: (index) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            experience: state.resumeData.experience.filter((_, i) => i !== index)
+          }
+        })),
+      
+      addEducation: () =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            education: [
+              ...state.resumeData.education,
+              {
+                id: Date.now().toString(),
+                school: '',
+                degree: '',
+                major: '',
+                duration: '',
+              }
+            ]
+          }
+        })),
+      
+      updateEducation: (index, field, value) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            education: state.resumeData.education.map((edu, i) =>
+              i === index ? { ...edu, [field]: value } : edu
+            )
+          }
+        })),
+      
+      removeEducation: (index) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            education: state.resumeData.education.filter((_, i) => i !== index)
+          }
+        })),
+      
+      addProject: () =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            projects: [
+              ...state.resumeData.projects,
+              {
+                id: Date.now().toString(),
+                name: '',
+                description: '',
+                technologies: [],
+                duration: '',
+              }
+            ]
+          }
+        })),
+      
+      updateProject: (index, field, value) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            projects: state.resumeData.projects.map((proj, i) =>
+              i === index ? { ...proj, [field]: value } : proj
+            )
+          }
+        })),
+      
+      removeProject: (index) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            projects: state.resumeData.projects.filter((_, i) => i !== index)
+          }
+        })),
+      
+      addSkill: (skill) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            skills: [
+              ...state.resumeData.skills,
+              { ...skill, id: Date.now().toString() }
+            ]
+          }
+        })),
+      
+      updateSkill: (index, field, value) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            skills: state.resumeData.skills.map((skill, i) =>
+              i === index ? { ...skill, [field]: value } : skill
+            )
+          }
+        })),
+      
+      removeSkill: (index) =>
+        set((state) => ({
+          resumeData: {
+            ...state.resumeData,
+            skills: state.resumeData.skills.filter((_, i) => i !== index)
+          }
         })),
         
       setTemplate: (template) =>
