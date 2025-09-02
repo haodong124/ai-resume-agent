@@ -3,6 +3,8 @@ import React, { useState } from 'react'
 import { Plus, Trash2, Save, User, Briefcase, GraduationCap, Award, Code } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useResumeStore } from '../features/resume/state'
+// 使用统一的类型定义，删除本地重复定义
+import type { ResumeData, Experience, Education, Skill, Project } from '../types/resume'
 
 export const ResumeEditor: React.FC = () => {
   const { 
@@ -25,6 +27,7 @@ export const ResumeEditor: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('personal')
   const [isSaving, setIsSaving] = useState(false)
 
+  // 其余代码保持不变...
   const handleSave = async () => {
     setIsSaving(true)
     try {
@@ -173,7 +176,7 @@ export const ResumeEditor: React.FC = () => {
             </div>
           )}
 
-          {/* 工作经历 */}
+          {/* 工作经历部分 */}
           {activeSection === 'experience' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
@@ -267,7 +270,7 @@ export const ResumeEditor: React.FC = () => {
             </div>
           )}
 
-          {/* 教育背景 */}
+          {/* 教育背景部分 */}
           {activeSection === 'education' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
@@ -361,7 +364,7 @@ export const ResumeEditor: React.FC = () => {
             </div>
           )}
 
-          {/* 项目经验 */}
+          {/* 项目经验部分 */}
           {activeSection === 'projects' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
@@ -455,7 +458,7 @@ export const ResumeEditor: React.FC = () => {
             </div>
           )}
 
-          {/* 专业技能 */}
+          {/* 专业技能部分 */}
           {activeSection === 'skills' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
