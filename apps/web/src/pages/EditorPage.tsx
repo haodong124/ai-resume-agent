@@ -1,12 +1,14 @@
-// apps/web/src/pages/EditorPage.tsx (更新版本)
+// apps/web/src/pages/EditorPage.tsx (最终完整版)
 import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   ArrowLeft, Save, Download, Eye, EyeOff, Sparkles, 
-  ChevronDown, Loader2
+  ChevronDown, Loader2, BarChart3, Target
 } from 'lucide-react'
 import { useResumeStore } from '../features/resume/state'
 import ResumeEditor from '../components/ResumeEditor'
+import ResumeAnalyzer from '../components/ResumeAnalyzer'
+import JobMatchAnalysis from '../components/JobMatchAnalysis'
 import toast from 'react-hot-toast'
 
 // 动态导入模板
@@ -22,6 +24,9 @@ const EditorPage: React.FC = () => {
   const navigate = useNavigate()
   const { resumeData, selectedTemplate, setTemplate } = useResumeStore()
   const [showPreview, setShowPreview] = useState(true)
+  const [showAnalyzer, setShowAnalyzer] = useState(false)
+  const [showJobMatch, setShowJobMatch] = useState(false)
+  const [rightPanelContent, setRightPanelContent] = useState<'preview' | 'analyzer' | 'jobmatch'>('preview')
   const [isSaving, setIsSaving] = useState(false)
 
   const handleSave = async () => {
@@ -105,13 +110,35 @@ const EditorPage: React.FC = () => {
 
             <div className="w-px h-6 bg-gray-300" />
 
-            {/* 预览切换 */}
+            {/* 右侧面板切换 */}
             <button
-              onClick={() => setShowPreview(!showPreview)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition"
-              title={showPreview ? '隐藏预览' : '显示预览'}
+              onClick={() => setRightPanelContent('preview')}
+              className={`p-2 rounded-lg transition ${
+                rightPanelContent === 'preview' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
+              }`}
+              title="预览"
             >
-              {showPreview ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              <Eye className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={() => setRightPanelContent('analyzer')}
+              className={`p-2 rounded-lg transition ${
+                rightPanelContent === 'analyzer' ? 'bg-green-100 text-green-600' : 'hover:bg-gray-100'
+              }`}
+              title="简历分析"
+            >
+              <BarChart3 className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={() => setRightPanelContent('jobmatch')}
+              className={`p-2 rounded-lg transition ${
+                rightPanelContent === 'jobmatch' ? 'bg-purple-100 text-purple-600' : 'hover:bg-gray-100'
+              }`}
+              title="职位匹配"
+            >
+              <Target className="w-5 h-5" />
             </button>
 
             <div className="w-px h-6 bg-gray-300" />
@@ -140,30 +167,50 @@ const EditorPage: React.FC = () => {
       {/* 主要内容区域 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 编辑器 */}
-        <div className={`${showPreview ? 'w-1/2' : 'w-full'} border-r border-gray-200`}>
+        <div className="w-1/2 border-r border-gray-200">
           <ResumeEditor />
         </div>
 
-        {/* 预览区域 */}
-        {showPreview && (
-          <div className="w-1/2 bg-white overflow-y-auto">
-            <div className="p-6">
-              <div className="mb-4 text-center">
-                <h2 className="text-lg font-semibold text-gray-700">简历预览</h2>
-              </div>
-              
-              <div id="resume-preview" className="bg-white">
-                <Suspense fallback={
-                  <div className="flex items-center justify-center h-64">
-                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                  </div>
-                }>
-                  <SelectedTemplate resumeData={resumeData} isPreview={true} />
-                </Suspense>
-              </div>
-            </div>
+        {/* 右侧面板 */}
+        <div className="w-1/2 bg-white overflow-y-auto">
+          <div className="p-6">
+            {rightPanelContent === 'preview' && (
+              <>
+                <div className="mb-4 text-center">
+                  <h2 className="text-lg font-semibold text-gray-700">简历预览</h2>
+                </div>
+                
+                <div id="resume-preview" className="bg-white">
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center h-64">
+                      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                    </div>
+                  }>
+                    <SelectedTemplate resumeData={resumeData} isPreview={true} />
+                  </Suspense>
+                </div>
+              </>
+            )}
+
+            {rightPanelContent === 'analyzer' && (
+              <>
+                <div className="mb-4 text-center">
+                  <h2 className="text-lg font-semibold text-gray-700">简历分析</h2>
+                </div>
+                <ResumeAnalyzer />
+              </>
+            )}
+
+            {rightPanelContent === 'jobmatch' && (
+              <>
+                <div className="mb-4 text-center">
+                  <h2 className="text-lg font-semibold text-gray-700">职位匹配分析</h2>
+                </div>
+                <JobMatchAnalysis />
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
