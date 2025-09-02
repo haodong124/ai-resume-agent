@@ -1,7 +1,10 @@
+// apps/web/src/App.tsx
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import EditorPage from './pages/EditorPage'
+import JobRecommendations from './components/JobRecommendations'
+import CareerChat from './components/CareerChat'
 
 // 简单的主页组件
 const HomePage: React.FC = () => {
@@ -23,92 +26,59 @@ const HomePage: React.FC = () => {
             让每一份简历都成为你职场成功的敲门砖。
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
             <button
               onClick={() => navigate('/editor')}
-              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all text-lg font-semibold"
+              className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all"
             >
-              开始制作简历
+              <div className="w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                <User className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">简历编辑器</h3>
+              <p className="text-gray-600 text-sm">制作专业简历</p>
             </button>
             
             <button
-              onClick={() => navigate('/jobs-match')}
-              className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-purple-600 hover:text-purple-600 transition-all text-lg font-semibold"
+              onClick={() => navigate('/jobs')}
+              className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all"
             >
-              职位匹配分析
+              <div className="w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                <Briefcase className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">职位推荐</h3>
+              <p className="text-gray-600 text-sm">AI智能匹配</p>
+            </button>
+            
+            <button
+              onClick={() => navigate('/career-chat')}
+              className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all"
+            >
+              <div className="w-12 h-12 bg-green-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">职业咨询</h3>
+              <p className="text-gray-600 text-sm">AI职业顾问</p>
+            </button>
+            
+            <button
+              onClick={() => navigate('/interview')}
+              className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all"
+            >
+              <div className="w-12 h-12 bg-orange-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                <Award className="w-6 h-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">模拟面试</h3>
+              <p className="text-gray-600 text-sm">面试练习</p>
             </button>
           </div>
         </div>
-
-        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center p-6 bg-white rounded-lg shadow-lg">
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-purple-600 text-xl">🤖</span>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">AI 智能优化</h3>
-            <p className="text-gray-600">自动优化简历内容，提升ATS通过率</p>
-          </div>
-          
-          <div className="text-center p-6 bg-white rounded-lg shadow-lg">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-blue-600 text-xl">🎯</span>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">职位匹配</h3>
-            <p className="text-gray-600">精准分析简历与目标职位的匹配度</p>
-          </div>
-          
-          <div className="text-center p-6 bg-white rounded-lg shadow-lg">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-green-600 text-xl">📄</span>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">专业模板</h3>
-            <p className="text-gray-600">多种专业模板，适配不同行业需求</p>
-          </div>
-        </div>
       </div>
     </div>
   )
 }
 
-// 简单的职位匹配页面
-const JobsMatchPage: React.FC = () => {
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">职位匹配分析</h1>
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600 mb-4">功能开发中，敬请期待！</p>
-          <button
-            onClick={() => window.location.href = '/'}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            返回首页
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// 技能推荐页面
-const SkillsPage: React.FC = () => {
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">技能推荐</h1>
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600 mb-4">AI技能推荐功能开发中，敬请期待！</p>
-          <button
-            onClick={() => window.location.href = '/'}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            返回首页
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
+// 导入缺少的图标
+import { MessageSquare, Award, Briefcase } from 'lucide-react'
 
 function App() {
   return (
@@ -117,8 +87,9 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/editor" element={<EditorPage />} />
-          <Route path="/jobs-match" element={<JobsMatchPage />} />
-          <Route path="/skills" element={<SkillsPage />} />
+          <Route path="/jobs" element={<JobRecommendations />} />
+          <Route path="/career-chat" element={<CareerChat />} />
+          <Route path="/interview" element={<InterviewPage />} />
         </Routes>
         
         <Toaster
