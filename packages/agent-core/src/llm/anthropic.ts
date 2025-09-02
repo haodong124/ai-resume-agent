@@ -1,5 +1,5 @@
 // packages/agent-core/src/llm/anthropic.ts
-import Anthropic from '@anthropic-ai/sdk'
+const Anthropic = require('@anthropic-ai/sdk')
 
 export interface LLMConfig {
   apiKey: string
@@ -9,7 +9,7 @@ export interface LLMConfig {
 }
 
 export class AnthropicClient {
-  private client: Anthropic
+  private client: any
   private config: LLMConfig
   
   constructor(config: LLMConfig) {
@@ -20,7 +20,9 @@ export class AnthropicClient {
       ...config
     }
     
-    this.client = new Anthropic({
+    // Initialize Anthropic client
+    const AnthropicClass = Anthropic.default || Anthropic
+    this.client = new AnthropicClass({
       apiKey: this.config.apiKey,
     })
   }
@@ -39,7 +41,9 @@ export class AnthropicClient {
           content: m.content
         }))
       
-      const response = await this.client.messages.create({
+      // Call the create method on the messages property
+      const messagesAPI = this.client.messages || this.client
+      const response = await messagesAPI.create({
         model: options?.model || this.config.model!,
         system: systemMessage,
         messages: anthropicMessages,
@@ -48,17 +52,19 @@ export class AnthropicClient {
       })
       
       // Handle response content
-      if (response.content && response.content.length > 0) {
+      if (response && response.content && response.content.length > 0) {
         const firstContent = response.content[0]
-        if ('text' in firstContent) {
+        if (typeof firstContent === 'string') {
+          return firstContent
+        } else if (firstContent && typeof firstContent === 'object' && 'text' in firstContent) {
           return firstContent.text
         }
       }
       
       return ''
-    } catch (error) {
+    } catch (error: any) {
       console.error('Anthropic API error:', error)
-      throw new Error('Failed to get response from Anthropic API')
+      throw new Error(`Failed to get response from Anthropic API: ${error.message}`)
     }
   }
   
