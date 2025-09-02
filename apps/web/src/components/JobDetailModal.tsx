@@ -101,89 +101,96 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
         </div>
 
         {/* 内容区域 */}
-        <div className="p-6 overflow-y-auto max-h-96">
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* 关键信息 */}
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">核心要求</h4>
-                  <div className="space-y-2">
-                    {job.requiredSkills.slice(0, 8).map((skill, index) => (
-                      <span key={index} className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm mr-2 mb-2">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">发展前景</h4>
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                    <span className="text-green-600 font-medium">
-                      成长潜力：{job.growthPotential}%
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    该职位在当前市场环境下具有良好的发展前景
-                  </p>
-                </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">职位描述</h4>
+                <p className="text-gray-600">{job.description}</p>
               </div>
 
-              {/* 推荐理由 */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">推荐理由</h4>
-                <div className="space-y-2">
-                  {job.reasons.map((reason, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <Star className="w-4 h-4 text-yellow-500 mt-0.5" />
-                      <span className="text-gray-700">{reason.description}</span>
-                    </div>
+                <h4 className="font-semibold text-gray-900 mb-3">技能要求</h4>
+                <div className="flex flex-wrap gap-2">
+                  {job.requiredSkills.map((skill, index) => (
+                    <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
+                      {skill}
+                    </span>
                   ))}
                 </div>
               </div>
+
+              {job.benefits && job.benefits.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">福利待遇</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {job.benefits.map((benefit, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Star className="w-4 h-4 text-yellow-500" />
+                        <span className="text-gray-600">{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'analysis' && (
             <div className="space-y-6">
-              {/* 匹配度分析 */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-4">技能匹配分析</h4>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-center mb-4">
-                    <div className={`text-4xl font-bold ${getScoreColor(job.matchScore)}`}>
+                <h4 className="font-semibold text-gray-900 mb-4">匹配度分析</h4>
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-lg font-medium">总体匹配度</span>
+                    <span className={`text-3xl font-bold ${getScoreColor(job.matchScore)}`}>
                       {job.matchScore}%
-                    </div>
-                    <div className="text-gray-600">总体匹配度</div>
+                    </span>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h5 className="font-medium text-green-700 mb-2">已具备技能</h5>
-                      <div className="space-y-1">
-                        {job.requiredSkills.filter(skill => 
-                          !job.missingSkills.includes(skill)
-                        ).map((skill, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-sm text-gray-700">{skill}</span>
-                          </div>
-                        ))}
-                      </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className={`h-3 rounded-full ${
+                        job.matchScore >= 80 ? 'bg-green-500' :
+                        job.matchScore >= 60 ? 'bg-yellow-500' :
+                        'bg-red-500'
+                      }`}
+                      style={{ width: `${job.matchScore}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-4">技能匹配详情</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <h5 className="font-medium text-green-700">已匹配技能</h5>
                     </div>
-                    
-                    <div>
-                      <h5 className="font-medium text-orange-700 mb-2">需要提升</h5>
-                      <div className="space-y-1">
-                        {job.missingSkills.map((skill, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                            <span className="text-sm text-gray-700">{skill}</span>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="space-y-2">
+                      {job.matchedSkills.map((skill, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Target className="w-4 h-4 text-green-600" />
+                          <span className="text-sm text-gray-700">{skill}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                      <h5 className="font-medium text-orange-700">需要提升</h5>
+                    </div>
+                    <div className="space-y-2">
+                      {job.missingSkills.map((skill, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 text-orange-600" />
+                          <span className="text-sm text-gray-700">{skill}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -235,7 +242,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, isOpen, onC
               关闭
             </button>
             {job.applicationUrl && (
-              
+              <a
                 href={job.applicationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
