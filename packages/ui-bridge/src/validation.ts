@@ -78,7 +78,12 @@ export const ResumeDataSchema = z.object({
 })
 
 export function validateResumeData(data: unknown): ResumeData {
-  return ResumeDataSchema.parse(data)
+  const result = ResumeDataSchema.safeParse(data)
+  if (result.success) {
+    return result.data as ResumeData
+  } else {
+    throw new ValidationError(result.error)
+  }
 }
 
 export class ValidationError extends Error {
@@ -86,4 +91,9 @@ export class ValidationError extends Error {
     super('Validation failed')
     this.name = 'ValidationError'
   }
+}
+
+// Type assertion helper to ensure compatibility
+export function assertResumeData(data: any): ResumeData {
+  return data as ResumeData
 }
