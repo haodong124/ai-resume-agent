@@ -4,6 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  root: __dirname, // 明确指定根目录
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -15,8 +16,10 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {
+      input: path.resolve(__dirname, 'index.html'), // 明确指定入口文件
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
