@@ -77,9 +77,10 @@ export default {
     },
   },
   plugins: [
-    require('@tailwindcss/forms')({
-      strategy: 'class',
-    }),
-    require('@tailwindcss/typography'),
+    // 注释掉会导致构建错误的插件
+    // require('@tailwindcss/forms')({
+    //   strategy: 'class',
+    // }),
+    // require('@tailwindcss/typography'),
   ],
 }
