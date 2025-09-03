@@ -1,8 +1,10 @@
 // apps/web/src/pages/CareerChatPage.tsx
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Send, Bot, User, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { openaiService } from '../services/openai'
+import { db, auth } from '../lib/supabase'
 
 interface Message {
   id: string
@@ -17,12 +19,22 @@ const CareerChatPage: React.FC = () => {
     {
       id: '1',
       role: 'assistant',
-      content: '你好！我是你的职业发展顾问。我可以帮助你进行职业规划、简历优化、面试准备等。请问有什么可以帮助你的吗？',
+      content: '你好！我是你的AI职业发展顾问。我可以帮助你：\n\n• 优化简历内容\n• 分析职位匹配度\n• 提供面试准备建议\n• 制定职业规划\n• 解答求职相关问题\n\n请问有什么可以帮助你的吗？',
       timestamp: new Date()
     }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [sessionId] = useState(() => crypto.randomUUID())
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return
@@ -39,41 +51,63 @@ const CareerChatPage: React.FC = () => {
     setLoading(true)
 
     try {
-      // 模拟 AI 响应（实际应调用 API）
-      setTimeout(() => {
+      // 保存用户消息到数据库
+      const user = await auth.getUser()
+      if (user) {
+        await db.chat.saveMessage({
+          session_id: sessionId,
+          role: 'user',
+          content: input
+        })
+      }
+
+      // 调用 AI API
+      const response = await openaiService.chat(input)
+      
+      if (response.success) {
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: getAIResponse(input),
+          content: response.message,
           timestamp: new Date()
         }
+        
         setMessages(prev => [...prev, aiMessage])
-        setLoading(false)
-      }, 1500)
+        
+        // 保存 AI 回复到数据库
+        if (user) {
+          await db.chat.saveMessage({
+            session_id: sessionId,
+            role: 'assistant',
+            content: response.message
+          })
+        }
+      } else {
+        throw new Error('AI 响应失败')
+      }
     } catch (error) {
+      console.error('发送消息失败:', error)
       toast.error('发送失败，请重试')
+      
+      // 如果 AI 失败，使用备用回复
+      const fallbackMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: '抱歉，我暂时无法回复。请稍后再试或者换个问题。',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, fallbackMessage])
+    } finally {
       setLoading(false)
     }
   }
 
-  // 模拟 AI 响应逻辑
-  const getAIResponse = (question: string): string => {
-    const lowerQuestion = question.toLowerCase()
-    
-    if (lowerQuestion.includes('简历')) {
-      return '关于简历优化，我建议你：\n1. 使用量化的成果描述\n2. 突出与目标职位相关的经验\n3. 保持简洁，控制在1-2页\n4. 使用专业的格式和布局\n\n你想了解哪个方面的具体建议？'
-    }
-    
-    if (lowerQuestion.includes('面试')) {
-      return '面试准备的关键点：\n1. 研究目标公司和职位\n2. 准备STAR法则的案例故事\n3. 练习常见面试问题\n4. 准备好反问面试官的问题\n\n需要我帮你模拟面试吗？'
-    }
-    
-    if (lowerQuestion.includes('职业规划') || lowerQuestion.includes('发展')) {
-      return '职业规划是一个长期过程，建议你：\n1. 明确自己的兴趣和优势\n2. 设定短期和长期目标\n3. 持续学习和提升技能\n4. 建立行业人脉网络\n\n你目前处于职业生涯的哪个阶段？'
-    }
-    
-    return '这是个很好的问题！让我为你提供一些建议。你能详细说明一下你的具体情况吗？比如你的背景、目标和当前面临的挑战。'
-  }
+  const quickQuestions = [
+    '如何优化我的简历？',
+    '面试需要准备什么？',
+    '如何提升技术技能？',
+    '薪资谈判技巧'
+  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -146,6 +180,8 @@ const CareerChatPage: React.FC = () => {
                 </div>
               </div>
             )}
+            
+            <div ref={messagesEndRef} />
           </div>
 
           {/* 输入区域 */}
@@ -172,7 +208,7 @@ const CareerChatPage: React.FC = () => {
             
             {/* 快捷问题 */}
             <div className="mt-3 flex flex-wrap gap-2">
-              {['如何优化简历？', '面试技巧', '职业规划建议', '薪资谈判'].map((question) => (
+              {quickQuestions.map((question) => (
                 <button
                   key={question}
                   onClick={() => setInput(question)}
