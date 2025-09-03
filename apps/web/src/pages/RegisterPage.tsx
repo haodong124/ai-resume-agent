@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Mail, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { auth } from '../lib/supabase'
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
@@ -37,15 +38,41 @@ const RegisterPage: React.FC = () => {
     setLoading(true)
     
     try {
-      // 模拟注册
-      setTimeout(() => {
-        toast.success('注册成功！正在登录...')
+      const { data, error } = await auth.signUp(
+        formData.email,
+        formData.password,
+        formData.name
+      )
+      
+      if (error) {
+        toast.error(error.message || '注册失败')
+        return
+      }
+
+      toast.success('注册成功！请查看邮箱进行验证')
+      
+      // 直接登录用户
+      const { error: signInError } = await auth.signIn(formData.email, formData.password)
+      if (!signInError) {
         navigate('/dashboard')
-      }, 1500)
+      } else {
+        navigate('/login')
+      }
     } catch (error) {
       toast.error('注册失败，请稍后重试')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSocialSignUp = async (provider: 'google' | 'github') => {
+    try {
+      const { error } = await auth.signInWithProvider(provider)
+      if (error) {
+        toast.error(`${provider} 注册失败`)
+      }
+    } catch (error) {
+      toast.error('注册失败')
     }
   }
 
@@ -157,14 +184,7 @@ const RegisterPage: React.FC = () => {
                 required
               />
               <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
-                我同意{' '}
-                <Link to="/terms" className="text-blue-600 hover:text-blue-700">
-                  服务条款
-                </Link>
-                {' '}和{' '}
-                <Link to="/privacy" className="text-blue-600 hover:text-blue-700">
-                  隐私政策
-                </Link>
+                我同意服务条款和隐私政策
               </label>
             </div>
 
@@ -197,11 +217,17 @@ const RegisterPage: React.FC = () => {
 
           {/* 社交注册 */}
           <div className="space-y-3">
-            <button className="w-full py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center">
+            <button 
+              onClick={() => handleSocialSignUp('google')}
+              className="w-full py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center"
+            >
               <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 mr-2" />
               使用 Google 注册
             </button>
-            <button className="w-full py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center">
+            <button 
+              onClick={() => handleSocialSignUp('github')}
+              className="w-full py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center"
+            >
               <img src="https://github.com/favicon.ico" alt="GitHub" className="w-5 h-5 mr-2" />
               使用 GitHub 注册
             </button>
