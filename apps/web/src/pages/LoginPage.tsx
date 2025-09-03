@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { auth } from '../lib/supabase'
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate()
@@ -24,15 +25,30 @@ const LoginPage: React.FC = () => {
     setLoading(true)
     
     try {
-      // 模拟登录
-      setTimeout(() => {
-        toast.success('登录成功！')
-        navigate('/dashboard')
-      }, 1500)
+      const { data, error } = await auth.signIn(formData.email, formData.password)
+      
+      if (error) {
+        toast.error(error.message || '登录失败')
+        return
+      }
+
+      toast.success('登录成功！')
+      navigate('/dashboard')
     } catch (error) {
       toast.error('登录失败，请检查您的邮箱和密码')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSocialLogin = async (provider: 'google' | 'github') => {
+    try {
+      const { error } = await auth.signInWithProvider(provider)
+      if (error) {
+        toast.error(`${provider} 登录失败`)
+      }
+    } catch (error) {
+      toast.error('登录失败')
     }
   }
 
@@ -109,9 +125,24 @@ const LoginPage: React.FC = () => {
                   记住我
                 </label>
               </div>
-              <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (formData.email) {
+                    const { error } = await auth.resetPassword(formData.email)
+                    if (error) {
+                      toast.error('重置密码失败')
+                    } else {
+                      toast.success('重置链接已发送到您的邮箱')
+                    }
+                  } else {
+                    toast.error('请输入邮箱地址')
+                  }
+                }}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
                 忘记密码？
-              </Link>
+              </button>
             </div>
 
             {/* 登录按钮 */}
@@ -143,11 +174,17 @@ const LoginPage: React.FC = () => {
 
           {/* 社交登录 */}
           <div className="space-y-3">
-            <button className="w-full py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center">
+            <button 
+              onClick={() => handleSocialLogin('google')}
+              className="w-full py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center"
+            >
               <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 mr-2" />
               使用 Google 登录
             </button>
-            <button className="w-full py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center">
+            <button 
+              onClick={() => handleSocialLogin('github')}
+              className="w-full py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 flex items-center justify-center"
+            >
               <img src="https://github.com/favicon.ico" alt="GitHub" className="w-5 h-5 mr-2" />
               使用 GitHub 登录
             </button>
