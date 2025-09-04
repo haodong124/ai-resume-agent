@@ -1237,3 +1237,179 @@ export const isValidResume = (data: any): data is Resume => {
 export const isValidJobListing = (data: any): data is JobListing => {
   return data && typeof data.id === 'string' && typeof data.title === 'string'
 }
+// 导出权限检查函数
+export async function checkExportPermission(resumeId: string) {
+  try {
+    // 这里可以根据实际需求实现权限检查逻辑
+    // 例如：检查用户订阅级别、导出次数限制等
+    const user = await auth.getUser()
+    if (!user) {
+      return {
+        canExport: false,
+        currentClicks: 0,
+        requiredClicks: 3,
+        message: '请先登录'
+      }
+    }
+
+    // 获取用户资料检查订阅级别
+    const { data: profile } = await db.profiles.get()
+    
+    // 免费用户可能需要验证
+    if (profile?.subscription_tier === 'free') {
+      // 这里可以实现点击验证逻辑
+      return {
+        canExport: true,  // 暂时允许所有用户导出
+        currentClicks: 0,
+        requiredClicks: 0,
+        message: '免费版用户每天可导出3次'
+      }
+    }
+    
+    // 付费用户直接允许
+    return {
+      canExport: true,
+      currentClicks: 0,
+      requiredClicks: 0,
+      message: '无限制导出'
+    }
+  } catch (error) {
+    console.error('Check export permission error:', error)
+    return {
+      canExport: true,  // 出错时默认允许
+      currentClicks: 0,
+      requiredClicks: 0
+    }
+  }
+}
+
+// 创建分享链接函数
+export async function createShareLink(resumeId: string, isPublic: boolean = true) {
+  try {
+    const user = await auth.getUser()
+    if (!user) {
+      return {
+        success: false,
+        url: '',
+        error: '请先登录'
+      }
+    }
+
+    // 生成唯一的分享令牌
+    const shareToken = Math.random().toString(36).substring(2, 15) + 
+                      Math.random().toString(36).substring(2, 15)
+    
+    // 更新简历的分享设置
+    const { data, error } = await supabase
+      .from('resumes')
+      .update({ 
+        share_token: shareToken,
+        is_public: isPublic,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', resumeId)
+      .eq('user_id', user.id)  // 确保是用户自己的简历
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Create share link error:', error)
+      return {
+        success: false,
+        url: '',
+        error: handleSupabaseError(error)
+      }
+    }
+    
+    // 生成分享链接
+    const shareUrl = `${window.location.origin}/share/${shareToken}`
+    
+    return {
+      success: true,
+      url: shareUrl,
+      token: shareToken,
+      expiresAt: null  // 可以添加过期时间逻辑
+    }
+  } catch (error) {
+    console.error('Create share link error:', error)
+    return {
+      success: false,
+      url: '',
+      error: '创建分享链接失败'
+    }
+  }
+}
+
+// 获取分享的简历（通过分享令牌）
+export async function getSharedResume(shareToken: string) {
+  try {
+    const { data, error } = await supabase
+      .from('resumes')
+      .select('*')
+      .eq('share_token', shareToken)
+      .eq('is_public', true)
+      .single()
+    
+    if (error) {
+      return {
+        success: false,
+        data: null,
+        error: '简历不存在或已失效'
+      }
+    }
+    
+    return {
+      success: true,
+      data,
+      error: null
+    }
+  } catch (error) {
+    console.error('Get shared resume error:', error)
+    return {
+      success: false,
+      data: null,
+      error: '获取简历失败'
+    }
+  }
+}
+
+// 取消分享链接
+export async function revokeShareLink(resumeId: string) {
+  try {
+    const user = await auth.getUser()
+    if (!user) {
+      return {
+        success: false,
+        error: '请先登录'
+      }
+    }
+
+    const { error } = await supabase
+      .from('resumes')
+      .update({ 
+        share_token: null,
+        is_public: false,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', resumeId)
+      .eq('user_id', user.id)
+    
+    if (error) {
+      return {
+        success: false,
+        error: handleSupabaseError(error)
+      }
+    }
+    
+    return {
+      success: true,
+      error: null
+    }
+  } catch (error) {
+    console.error('Revoke share link error:', error)
+    return {
+      success: false,
+      error: '取消分享失败'
+    }
+  }
+}
