@@ -1,23 +1,15 @@
-// apps/web/src/features/resume/state.ts
+// ===== 3. apps/web/src/features/resume/state.ts =====
+// 修复后的状态管理文件
+
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-// 使用统一的类型定义
-import type { 
-  ResumeData, 
-  PersonalInfo, 
-  Experience, 
-  Education, 
-  Skill, 
-  Project 
-} from '../../types/resume'
+import type { ResumeData, PersonalInfo, Experience, Education, Project, Skill } from '../../types/resume'
 
 interface ResumeState {
   resumeData: ResumeData
   selectedTemplate: string
-  isEditing: boolean
-  aiSuggestions: string[]
+  suggestions: string[]
   
-  // Actions
   updateResumeData: (data: Partial<ResumeData>) => void
   updatePersonalInfo: (info: Partial<PersonalInfo>) => void
   addExperience: () => void
@@ -29,42 +21,51 @@ interface ResumeState {
   addProject: () => void
   updateProject: (index: number, field: keyof Project, value: any) => void
   removeProject: (index: number) => void
-  addSkill: (skill: Omit<Skill, 'id'>) => void
+  addSkill: (skill: string) => void
   updateSkill: (index: number, field: keyof Skill, value: any) => void
   removeSkill: (index: number) => void
   setTemplate: (template: string) => void
-  addAISuggestion: (suggestion: string) => void
-  clearSuggestions: () => void
+  addSuggestion: (suggestion: string) => void
+}
+
+const initialResumeData: ResumeData = {
+  personalInfo: {
+    name: '',
+    title: '',  // 添加title字段
+    email: '',
+    phone: '',
+    location: '',
+    linkedin: '',
+    github: '',
+    portfolio: '',
+    website: '',
+    summary: ''
+  },
+  experiences: [],
+  experience: [],  // 添加兼容性字段
+  education: [],
+  skills: [],
+  projects: []
 }
 
 export const useResumeStore = create<ResumeState>()(
   persist(
     (set) => ({
-      resumeData: {
-        personalInfo: {
-          name: '',
-          email: '',
-          phone: '',
-          location: '',
-          summary: '',
-        },
-        experience: [],
-        education: [],
-        skills: [],
-        projects: [],
-        certificates: [],
-        achievements: [],
-        languages: [],
-      },
+      resumeData: initialResumeData,
       selectedTemplate: 'standard',
-      isEditing: false,
-      aiSuggestions: [],
-      
+      suggestions: [],
+
       updateResumeData: (data) =>
         set((state) => ({
-          resumeData: { ...state.resumeData, ...data },
+          resumeData: { 
+            ...state.resumeData, 
+            ...data,
+            // 同步experience和experiences字段
+            experience: data.experiences || state.resumeData.experiences,
+            experiences: data.experience || data.experiences || state.resumeData.experiences
+          }
         })),
-      
+
       updatePersonalInfo: (info) =>
         set((state) => ({
           resumeData: {
@@ -72,43 +73,56 @@ export const useResumeStore = create<ResumeState>()(
             personalInfo: { ...state.resumeData.personalInfo, ...info }
           }
         })),
-      
+
       addExperience: () =>
-        set((state) => ({
-          resumeData: {
-            ...state.resumeData,
-            experience: [
-              ...state.resumeData.experience,
-              {
-                id: Date.now().toString(),
-                company: '',
-                position: '',
-                duration: '',
-                description: '',
-                achievements: []
-              }
-            ]
+        set((state) => {
+          const newExperience = {
+            id: Date.now().toString(),
+            company: '',
+            position: '',
+            startDate: '',
+            endDate: '',
+            current: false,
+            location: '',
+            duration: '',
+            description: '',
+            achievements: []
           }
-        })),
-      
+          return {
+            resumeData: {
+              ...state.resumeData,
+              experiences: [...state.resumeData.experiences, newExperience],
+              experience: [...state.resumeData.experiences, newExperience]
+            }
+          }
+        }),
+
       updateExperience: (index, field, value) =>
-        set((state) => ({
-          resumeData: {
-            ...state.resumeData,
-            experience: state.resumeData.experience.map((exp, i) =>
-              i === index ? { ...exp, [field]: value } : exp
-            )
+        set((state) => {
+          const updatedExperiences = state.resumeData.experiences.map((exp, i) =>
+            i === index ? { ...exp, [field]: value } : exp
+          )
+          return {
+            resumeData: {
+              ...state.resumeData,
+              experiences: updatedExperiences,
+              experience: updatedExperiences
+            }
           }
-        })),
-      
+        }),
+
       removeExperience: (index) =>
-        set((state) => ({
-          resumeData: {
-            ...state.resumeData,
-            experience: state.resumeData.experience.filter((_, i) => i !== index)
+        set((state) => {
+          const filteredExperiences = state.resumeData.experiences.filter((_, i) => i !== index)
+          return {
+            resumeData: {
+              ...state.resumeData,
+              experiences: filteredExperiences,
+              experience: filteredExperiences
+            }
           }
-        })),
-      
+        }),
+
       addEducation: () =>
         set((state) => ({
           resumeData: {
@@ -119,13 +133,18 @@ export const useResumeStore = create<ResumeState>()(
                 id: Date.now().toString(),
                 school: '',
                 degree: '',
+                field: '',
                 major: '',
+                startDate: '',
+                endDate: '',
                 duration: '',
+                gpa: '',
+                achievements: []
               }
             ]
           }
         })),
-      
+
       updateEducation: (index, field, value) =>
         set((state) => ({
           resumeData: {
@@ -135,7 +154,7 @@ export const useResumeStore = create<ResumeState>()(
             )
           }
         })),
-      
+
       removeEducation: (index) =>
         set((state) => ({
           resumeData: {
@@ -143,7 +162,7 @@ export const useResumeStore = create<ResumeState>()(
             education: state.resumeData.education.filter((_, i) => i !== index)
           }
         })),
-      
+
       addProject: () =>
         set((state) => ({
           resumeData: {
@@ -155,12 +174,16 @@ export const useResumeStore = create<ResumeState>()(
                 name: '',
                 description: '',
                 technologies: [],
+                startDate: '',
+                endDate: '',
                 duration: '',
+                link: '',
+                achievements: []
               }
             ]
           }
         })),
-      
+
       updateProject: (index, field, value) =>
         set((state) => ({
           resumeData: {
@@ -170,7 +193,7 @@ export const useResumeStore = create<ResumeState>()(
             )
           }
         })),
-      
+
       removeProject: (index) =>
         set((state) => ({
           resumeData: {
@@ -178,18 +201,23 @@ export const useResumeStore = create<ResumeState>()(
             projects: state.resumeData.projects.filter((_, i) => i !== index)
           }
         })),
-      
+
       addSkill: (skill) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
             skills: [
-              ...state.resumeData.skills,
-              { ...skill, id: Date.now().toString() }
+              ...state.resumeData.skills, 
+              { 
+                id: Date.now().toString(),
+                name: skill, 
+                level: 'Intermediate',
+                category: 'general'
+              }
             ]
           }
         })),
-      
+
       updateSkill: (index, field, value) =>
         set((state) => ({
           resumeData: {
@@ -199,7 +227,7 @@ export const useResumeStore = create<ResumeState>()(
             )
           }
         })),
-      
+
       removeSkill: (index) =>
         set((state) => ({
           resumeData: {
@@ -207,19 +235,20 @@ export const useResumeStore = create<ResumeState>()(
             skills: state.resumeData.skills.filter((_, i) => i !== index)
           }
         })),
-        
+
       setTemplate: (template) =>
         set({ selectedTemplate: template }),
-        
-      addAISuggestion: (suggestion) =>
+
+      addSuggestion: (suggestion) =>
         set((state) => ({
-          aiSuggestions: [...state.aiSuggestions, suggestion],
-        })),
-        
-      clearSuggestions: () => set({ aiSuggestions: [] }),
+          suggestions: [...state.suggestions, suggestion]
+        }))
     }),
     {
-      name: 'resume-storage',
+      name: 'resume-storage'
     }
   )
 )
+
+// 导出ResumeData类型
+export type { ResumeData }
