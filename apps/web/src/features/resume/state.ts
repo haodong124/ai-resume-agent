@@ -1,25 +1,18 @@
 // apps/web/src/features/resume/state.ts
+// Fixed version with proper types
+
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-// 使用统一的类型定义
-import type { 
-  ResumeData, 
-  PersonalInfo, 
-  Experience, 
-  Education, 
-  Skill, 
-  Project 
-} from '../../types/resume'
+import { ResumeData } from '../../types/resume'
 
 interface ResumeState {
   resumeData: ResumeData
   selectedTemplate: string
-  isEditing: boolean
-  aiSuggestions: string[]
+  suggestions: string[]
   
   // Actions
   updateResumeData: (data: Partial<ResumeData>) => void
-  updatePersonalInfo: (info: Partial<PersonalInfo>) => void
+  updatePersonalInfo: (info: Partial<ResumeData['personalInfo']>) => void
   addExperience: () => void
   updateExperience: (index: number, field: keyof Experience, value: any) => void
   removeExperience: (index: number) => void
@@ -29,86 +22,88 @@ interface ResumeState {
   addProject: () => void
   updateProject: (index: number, field: keyof Project, value: any) => void
   removeProject: (index: number) => void
-  addSkill: (skill: Omit<Skill, 'id'>) => void
+  addSkill: (skill: string) => void
   updateSkill: (index: number, field: keyof Skill, value: any) => void
   removeSkill: (index: number) => void
   setTemplate: (template: string) => void
-  addAISuggestion: (suggestion: string) => void
-  clearSuggestions: () => void
+  addSuggestion: (suggestion: string) => void
+}
+
+const initialResumeData: ResumeData = {
+  personalInfo: {
+    name: '',
+    title: '',
+    email: '',
+    phone: '',
+    location: '',
+    linkedin: '',
+    github: '',
+    portfolio: '',
+    summary: ''
+  },
+  experiences: [],
+  education: [],
+  skills: [],
+  projects: []
 }
 
 export const useResumeStore = create<ResumeState>()(
   persist(
     (set) => ({
-      resumeData: {
-        personalInfo: {
-          name: '',
-          email: '',
-          phone: '',
-          location: '',
-          summary: '',
-        },
-        experience: [],
-        education: [],
-        skills: [],
-        projects: [],
-        certificates: [],
-        achievements: [],
-        languages: [],
-      },
+      resumeData: initialResumeData,
       selectedTemplate: 'standard',
-      isEditing: false,
-      aiSuggestions: [],
-      
-      updateResumeData: (data) =>
+      suggestions: [],
+
+      updateResumeData: (data: Partial<ResumeData>) =>
         set((state) => ({
-          resumeData: { ...state.resumeData, ...data },
+          resumeData: { ...state.resumeData, ...data }
         })),
-      
-      updatePersonalInfo: (info) =>
+
+      updatePersonalInfo: (info: Partial<ResumeData['personalInfo']>) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
             personalInfo: { ...state.resumeData.personalInfo, ...info }
           }
         })),
-      
+
       addExperience: () =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
-            experience: [
-              ...state.resumeData.experience,
+            experiences: [
+              ...state.resumeData.experiences,
               {
-                id: Date.now().toString(),
                 company: '',
                 position: '',
-                duration: '',
+                startDate: '',
+                endDate: '',
+                current: false,
                 description: '',
                 achievements: []
               }
             ]
           }
         })),
-      
-      updateExperience: (index, field, value) =>
+
+      updateExperience: (index: number, field: keyof Experience, value: any) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
-            experience: state.resumeData.experience.map((exp, i) =>
+            experiences: state.resumeData.experiences.map((exp, i) =>
               i === index ? { ...exp, [field]: value } : exp
             )
           }
         })),
-      
-      removeExperience: (index) =>
+
+      removeExperience: (index: number) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
-            experience: state.resumeData.experience.filter((_, i) => i !== index)
+            experiences: state.resumeData.experiences.filter((_, i) => i !== index)
           }
         })),
-      
+
       addEducation: () =>
         set((state) => ({
           resumeData: {
@@ -116,17 +111,19 @@ export const useResumeStore = create<ResumeState>()(
             education: [
               ...state.resumeData.education,
               {
-                id: Date.now().toString(),
                 school: '',
                 degree: '',
-                major: '',
-                duration: '',
+                field: '',
+                startDate: '',
+                endDate: '',
+                gpa: '',
+                achievements: []
               }
             ]
           }
         })),
-      
-      updateEducation: (index, field, value) =>
+
+      updateEducation: (index: number, field: keyof Education, value: any) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
@@ -135,15 +132,15 @@ export const useResumeStore = create<ResumeState>()(
             )
           }
         })),
-      
-      removeEducation: (index) =>
+
+      removeEducation: (index: number) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
             education: state.resumeData.education.filter((_, i) => i !== index)
           }
         })),
-      
+
       addProject: () =>
         set((state) => ({
           resumeData: {
@@ -151,17 +148,19 @@ export const useResumeStore = create<ResumeState>()(
             projects: [
               ...state.resumeData.projects,
               {
-                id: Date.now().toString(),
                 name: '',
                 description: '',
                 technologies: [],
-                duration: '',
+                startDate: '',
+                endDate: '',
+                link: '',
+                achievements: []
               }
             ]
           }
         })),
-      
-      updateProject: (index, field, value) =>
+
+      updateProject: (index: number, field: keyof Project, value: any) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
@@ -170,27 +169,24 @@ export const useResumeStore = create<ResumeState>()(
             )
           }
         })),
-      
-      removeProject: (index) =>
+
+      removeProject: (index: number) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
             projects: state.resumeData.projects.filter((_, i) => i !== index)
           }
         })),
-      
-      addSkill: (skill) =>
+
+      addSkill: (skill: string) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
-            skills: [
-              ...state.resumeData.skills,
-              { ...skill, id: Date.now().toString() }
-            ]
+            skills: [...state.resumeData.skills, { name: skill, level: 'Intermediate' }]
           }
         })),
-      
-      updateSkill: (index, field, value) =>
+
+      updateSkill: (index: number, field: keyof Skill, value: any) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
@@ -199,27 +195,28 @@ export const useResumeStore = create<ResumeState>()(
             )
           }
         })),
-      
-      removeSkill: (index) =>
+
+      removeSkill: (index: number) =>
         set((state) => ({
           resumeData: {
             ...state.resumeData,
             skills: state.resumeData.skills.filter((_, i) => i !== index)
           }
         })),
-        
-      setTemplate: (template) =>
+
+      setTemplate: (template: string) =>
         set({ selectedTemplate: template }),
-        
-      addAISuggestion: (suggestion) =>
+
+      addSuggestion: (suggestion: string) =>
         set((state) => ({
-          aiSuggestions: [...state.aiSuggestions, suggestion],
-        })),
-        
-      clearSuggestions: () => set({ aiSuggestions: [] }),
+          suggestions: [...state.suggestions, suggestion]
+        }))
     }),
     {
-      name: 'resume-storage',
+      name: 'resume-storage'
     }
   )
 )
+
+// Export the ResumeData type
+export type { ResumeData }
