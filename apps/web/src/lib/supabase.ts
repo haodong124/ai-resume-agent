@@ -45,6 +45,36 @@ export interface ChatMessage {
   created_at: string
 }
 
+export interface JobListing {
+  id: string
+  title: string
+  company: string
+  location: string
+  salary_min?: number
+  salary_max?: number
+  salary_text?: string
+  description?: string
+  job_url: string
+  source: string
+  skills: string[]
+  posted_date: string
+  scraped_at: string
+  is_active: boolean
+  view_count: number
+  created_at: string
+}
+
+export interface JobApplication {
+  id: string
+  user_id: string
+  job_id: string
+  status: 'saved' | 'applied' | 'interviewing' | 'rejected' | 'offered'
+  notes?: string
+  applied_at?: string
+  created_at: string
+  updated_at: string
+}
+
 // 认证辅助函数
 export const auth = {
   // 注册
@@ -252,6 +282,169 @@ export const db = {
         .select()
         .single()
       return { data, error }
+    }
+  },
+
+  // 职位相关操作
+  jobs: {
+    // 搜索职位
+    search: async (filters: {
+      title?: string
+      location?: string
+      salary_min?: number
+      skills?: string[]
+      page?: number
+      pageSize?: number
+    }) => {
+      let query = supabase
+        .from('job_listings')
+        .select('*')
+        .eq('is_active', true)
+        .order('scraped_at', { ascending: false })
+      
+      if (filters.title) {
+        query = query.ilike('title', `%${filters.title}%`)
+      }
+      if (filters.location) {
+        query = query.ilike('location', `%${filters.location}%`)
+      }
+      if (filters.salary_min) {
+        query = query.gte('salary_min', filters.salary_min)
+      }
+      if (filters.skills && filters.skills.length > 0) {
+        query = query.contains('skills', filters.skills)
+      }
+      
+      const page = filters.page || 0
+      const pageSize = filters.pageSize || 12
+      query = query.range(page * pageSize, (page + 1) * pageSize - 1)
+      
+      const { data, error } = await query
+      return { data, error }
+    },
+    
+    // 获取单个职位
+    getById: async (id: string) => {
+      const { data, error } = await supabase
+        .from('job_listings')
+        .select('*')
+        .eq('id', id)
+        .single()
+      return { data, error }
+    },
+    
+    // 增加查看次数
+    incrementViewCount: async (id: string) => {
+      const { data: job } = await supabase
+        .from('job_listings')
+        .select('view_count')
+        .eq('id', id)
+        .single()
+      
+      if (job) {
+        const { data, error } = await supabase
+          .from('job_listings')
+          .update({ view_count: (job.view_count || 0) + 1 })
+          .eq('id', id)
+        return { data, error }
+      }
+      return { data: null, error: new Error('Job not found') }
+    },
+    
+    // 获取推荐职位（基于用户简历）
+    getRecommended: async (userSkills: string[], limit: number = 10) => {
+      const { data, error } = await supabase
+        .from('job_listings')
+        .select('*')
+        .eq('is_active', true)
+        .contains('skills', userSkills)
+        .order('scraped_at', { ascending: false })
+        .limit(limit)
+      return { data, error }
+    }
+  },
+  
+  // 职位申请记录操作
+  applications: {
+    // 获取用户的申请记录
+    getUserApplications: async () => {
+      const user = await auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+      
+      const { data, error } = await supabase
+        .from('job_applications')
+        .select(`
+          *,
+          job:job_listings(*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      return { data, error }
+    },
+    
+    // 保存/收藏职位
+    saveJob: async (jobId: string) => {
+      const user = await auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+      
+      const { data, error } = await supabase
+        .from('job_applications')
+        .upsert({
+          user_id: user.id,
+          job_id: jobId,
+          status: 'saved'
+        })
+        .select()
+        .single()
+      return { data, error }
+    },
+    
+    // 更新申请状态
+    updateStatus: async (jobId: string, status: JobApplication['status'], notes?: string) => {
+      const user = await auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+      
+      const updates: any = { status }
+      if (notes) updates.notes = notes
+      if (status === 'applied') updates.applied_at = new Date().toISOString()
+      
+      const { data, error } = await supabase
+        .from('job_applications')
+        .update(updates)
+        .eq('user_id', user.id)
+        .eq('job_id', jobId)
+        .select()
+        .single()
+      return { data, error }
+    },
+    
+    // 删除申请记录
+    removeApplication: async (jobId: string) => {
+      const user = await auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+      
+      const { error } = await supabase
+        .from('job_applications')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('job_id', jobId)
+      return { error }
+    },
+    
+    // 获取已保存的职位ID列表
+    getSavedJobIds: async () => {
+      const user = await auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+      
+      const { data, error } = await supabase
+        .from('job_applications')
+        .select('job_id')
+        .eq('user_id', user.id)
+      
+      if (data) {
+        return { data: data.map(item => item.job_id), error }
+      }
+      return { data: [], error }
     }
   }
 }
