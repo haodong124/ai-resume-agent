@@ -414,7 +414,7 @@ const AmericanBusinessTemplate: React.FC<TemplateProps> = ({ resumeData, isPrevi
       {/* ... 其余代码保持不变 ... */}
       
       {/* 打印样式 */}
-      <style jsx>{`
+      <style>{`
         @media print {
           .bg-white {
             background: white !important;
