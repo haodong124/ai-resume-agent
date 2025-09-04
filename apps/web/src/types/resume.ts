@@ -1,6 +1,3 @@
-// apps/web/src/types/resume.ts
-// Create this file to export the ResumeData type properly
-
 export interface PersonalInfo {
   name: string
   title: string
@@ -55,4 +52,18 @@ export interface ResumeData {
   education: Education[]
   skills: Skill[]
   projects: Project[]
+}
+
+export interface JobRecommendation {
+  id: string
+  title: string
+  company: string
+  location: string
+  salary?: string
+  description?: string
+  requirements: string[]
+  benefits?: string[]
+  matchScore: number
+  matchedSkills?: string[]
+  missingSkills?: string[]
 }
