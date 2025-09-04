@@ -8,7 +8,7 @@ import {
   Briefcase,
   ExternalLink,
   Bookmark,
-  BookmarkCheck,
+  Check,  // 替换 BookmarkCheck
   Filter,
   ChevronRight,
   Building2,
@@ -285,7 +285,7 @@ const JobRecommendationsPage: React.FC = () => {
                       className="text-gray-400 hover:text-blue-600 transition"
                     >
                       {savedJobs.has(job.id) ? (
-                        <BookmarkCheck className="w-5 h-5" />
+                        <Check className="w-5 h-5 text-blue-600" />  // 使用 Check 替代 BookmarkCheck
                       ) : (
                         <Bookmark className="w-5 h-5" />
                       )}
