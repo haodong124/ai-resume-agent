@@ -1,22 +1,28 @@
 {
   "name": "@ai-resume-agent/functions",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "netlify functions:serve",
+    "dev": "netlify dev",
     "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext ts --fix",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@netlify/functions": "^2.4.1",
-    "openai": "^4.20.1",
-    "@anthropic-ai/sdk": "^0.10.0",
-    "zod": "^3.22.4",
-    "p-retry": "^5.1.2",
-    "p-queue": "^7.4.1"
+    "@supabase/supabase-js": "^2.39.0",
+    "openai": "^4.20.1"
   },
   "devDependencies": {
-    "@types/node": "^20.8.0",
-    "typescript": "^5.2.2"
+    "@types/node": "^20.10.4",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "@typescript-eslint/parser": "^6.13.2",
+    "eslint": "^8.55.0",
+    "netlify-cli": "^17.10.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.4"
   }
 }
