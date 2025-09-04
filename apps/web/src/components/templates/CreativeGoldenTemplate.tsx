@@ -548,7 +548,7 @@ const CreativeGoldenTemplate: React.FC<TemplateProps> = ({ resumeData, isPreview
       </div>
 
       {/* 打印样式 */}
-      <style jsx>{`
+      <style>{`
         @media print {
           .bg-white {
             background: white !important;
