@@ -1,66 +1,64 @@
 // apps/web/src/pages/SkillsPage.tsx
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Sparkles, BookOpen, Target } from 'lucide-react'
-import SmartSkillRecommender from '../components/SmartSkillRecommender'
-import LearningPathPlanner from '../components/LearningPathPlanner'
+import React from 'react'
+import SkillAnalysis from '../components/SkillAnalysis'
+import { BookOpen, Target, TrendingUp, Users } from 'lucide-react'
 
 const SkillsPage: React.FC = () => {
-  const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'recommend' | 'learning'>('recommend')
-
-  const tabs = [
-    { id: 'recommend', name: '技能推荐', icon: Sparkles },
-    { id: 'learning', name: '学习路径', icon: BookOpen }
-  ]
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 顶部导航 */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <button
-                onClick={() => navigate('/')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition mr-4"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h1 className="text-xl font-semibold">技能发展中心</h1>
+    <div className="max-w-6xl mx-auto p-6">
+      {/* 页面头部 */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">技能分析与发展</h1>
+        <p className="text-lg text-gray-600 mb-6">
+          基于AI分析您的技能现状，制定个性化的学习路径和职业发展规划
+        </p>
+
+        {/* 统计卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm">当前技能</p>
+                <p className="text-2xl font-bold">12</p>
+              </div>
+              <BookOpen className="w-8 h-8 text-blue-200" />
             </div>
-            
-            {/* 标签导航 */}
-            <div className="flex border border-gray-200 rounded-lg">
-              {tabs.map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center px-4 py-2 text-sm font-medium transition ${
-                      activeTab === tab.id
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    } ${tab.id === 'recommend' ? 'rounded-l-lg' : 'rounded-r-lg'}`}
-                  >
-                    <Icon className="w-4 h-4 mr-2" />
-                    {tab.name}
-                  </button>
-                )
-              })}
+          </div>
+
+          <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-lg text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm">技能缺口</p>
+                <p className="text-2xl font-bold">5</p>
+              </div>
+              <Target className="w-8 h-8 text-green-200" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm">学习路径</p>
+                <p className="text-2xl font-bold">3</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-purple-200" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-lg text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm">行业排名</p>
+                <p className="text-2xl font-bold">Top 20%</p>
+              </div>
+              <Users className="w-8 h-8 text-orange-200" />
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* 主要内容 */}
-      <main className="py-8">
-        <div className="max-w-6xl mx-auto px-6">
-          {activeTab === 'recommend' && <SmartSkillRecommender />}
-          {activeTab === 'learning' && <LearningPathPlanner />}
-        </div>
-      </main>
+      {/* 技能分析组件 */}
+      <SkillAnalysis />
     </div>
   )
 }
