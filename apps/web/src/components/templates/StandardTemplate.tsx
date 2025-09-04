@@ -693,7 +693,7 @@ const StandardTemplate: React.FC<TemplateProps> = ({ resumeData, isPreview = fal
       )}
 
       {/* 打印样式 */}
-      <style jsx>{`
+      <style>{`
         @media print {
           .bg-white {
             background: white !important;
