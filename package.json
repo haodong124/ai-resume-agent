@@ -37,8 +37,6 @@
     "start": "cd apps/web && npm run preview",
     "format": "prettier --write \"**/*.{js,ts,tsx,json,md,css}\"",
     "format:check": "prettier --check \"**/*.{js,ts,tsx,json,md,css}\"",
-    "prepare": "husky install || true",
-    "precommit": "lint-staged",
     "update-deps": "npx npm-check-updates -u && npm install",
     "check-deps": "npx depcheck || true"
   },
