@@ -1,5 +1,5 @@
 import React from 'react'
-import type { ResumeData } from '../ResumeEditor'
+import { ResumeData } from '../../types/resume'
 
 interface TemplateProps {
   resumeData: ResumeData
