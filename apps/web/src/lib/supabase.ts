@@ -1009,3 +1009,231 @@ export const db = {
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
+        .limit(limit)
+      return { data, error }
+    },
+
+    // 更新用户对推荐的反馈
+    updateFeedback: async (recommendationId: string, feedback: number) => {
+      const { data, error } = await supabase
+        .from('job_recommendations')
+        .update({ user_feedback: feedback })
+        .eq('id', recommendationId)
+        .select()
+        .single()
+      return { data, error }
+    },
+
+    // 获取推荐统计
+    getStats: async () => {
+      const user = await auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+      
+      const { data, error } = await supabase.rpc('get_recommendation_stats', {
+        user_id: user.id
+      })
+      return { data, error }
+    }
+  },
+
+  // 系统分析和报告
+  analytics: {
+    // 获取用户仪表板数据
+    getDashboardData: async () => {
+      const user = await auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+      
+      const [resumesResult, applicationsResult, interviewsResult, recommendationsResult] = await Promise.all([
+        supabase.from('resumes').select('id').eq('user_id', user.id),
+        supabase.from('job_applications').select('id, status').eq('user_id', user.id),
+        supabase.from('interview_sessions').select('id, status').eq('user_id', user.id),
+        supabase.from('job_recommendations').select('id').eq('user_id', user.id)
+      ])
+
+      const stats = {
+        total_resumes: resumesResult.data?.length || 0,
+        total_applications: applicationsResult.data?.length || 0,
+        active_applications: applicationsResult.data?.filter(app => ['applied', 'interviewing'].includes(app.status)).length || 0,
+        interviews_completed: interviewsResult.data?.filter(session => session.status === 'completed').length || 0,
+        recommendations_received: recommendationsResult.data?.length || 0
+      }
+
+      return { data: stats, error: null }
+    },
+
+    // 获取活动时间线
+    getActivityTimeline: async (limit: number = 20) => {
+      const user = await auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+      
+      // 这需要一个联合查询来获取各种活动
+      const { data, error } = await supabase.rpc('get_user_activity_timeline', {
+        user_id: user.id,
+        activity_limit: limit
+      })
+      return { data, error }
+    },
+
+    // 获取技能发展报告
+    getSkillDevelopmentReport: async () => {
+      const user = await auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+      
+      const { data, error } = await supabase.rpc('get_skill_development_report', {
+        user_id: user.id
+      })
+      return { data, error }
+    }
+  },
+
+  // 通用工具函数
+  utils: {
+    // 批量操作
+    batchOperation: async <T>(
+      tableName: string,
+      operation: 'insert' | 'update' | 'delete',
+      data: T[],
+      batchSize: number = 100
+    ) => {
+      const results = []
+      
+      for (let i = 0; i < data.length; i += batchSize) {
+        const batch = data.slice(i, i + batchSize)
+        let result
+        
+        switch (operation) {
+          case 'insert':
+            result = await supabase.from(tableName).insert(batch)
+            break
+          case 'update':
+            // 注意：批量更新需要特殊处理
+            result = await supabase.from(tableName).upsert(batch)
+            break
+          case 'delete':
+            // 批量删除需要特殊处理
+            const ids = batch.map((item: any) => item.id)
+            result = await supabase.from(tableName).delete().in('id', ids)
+            break
+          default:
+            throw new Error(`Unsupported operation: ${operation}`)
+        }
+        
+        results.push(result)
+      }
+      
+      return results
+    },
+
+    // 搜索建议
+    getSearchSuggestions: async (query: string, type: 'jobs' | 'skills' | 'companies') => {
+      const { data, error } = await supabase.rpc('get_search_suggestions', {
+        search_query: query,
+        suggestion_type: type
+      })
+      return { data, error }
+    },
+
+    // 数据导出
+    exportUserData: async () => {
+      const user = await auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+      
+      const [profile, resumes, applications, interviews, recommendations] = await Promise.all([
+        db.profiles.get(),
+        db.resumes.getAll(),
+        db.applications.getUserApplications(),
+        db.interviews.getUserSessions(),
+        db.recommendations.getHistory()
+      ])
+
+      return {
+        profile: profile.data,
+        resumes: resumes.data,
+        applications: applications.data,
+        interviews: interviews.data,
+        recommendations: recommendations.data,
+        exportDate: new Date().toISOString()
+      }
+    }
+  }
+}
+
+// 实时订阅辅助函数
+export const subscriptions = {
+  // 订阅用户简历更新
+  subscribeToResumes: (userId: string, callback: (payload: any) => void) => {
+    return supabase
+      .channel('resumes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'resumes',
+        filter: `user_id=eq.${userId}`
+      }, callback)
+      .subscribe()
+  },
+
+  // 订阅聊天消息
+  subscribeToChatMessages: (sessionId: string, callback: (payload: any) => void) => {
+    return supabase
+      .channel(`chat_${sessionId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `session_id=eq.${sessionId}`
+      }, callback)
+      .subscribe()
+  },
+
+  // 订阅面试会话更新
+  subscribeToInterviewSession: (sessionId: string, callback: (payload: any) => void) => {
+    return supabase
+      .channel(`interview_${sessionId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'interview_sessions',
+        filter: `id=eq.${sessionId}`
+      }, callback)
+      .subscribe()
+  },
+
+  // 取消订阅
+  unsubscribe: (subscription: any) => {
+    return supabase.removeChannel(subscription)
+  }
+}
+
+// 错误处理辅助函数
+export const handleSupabaseError = (error: any) => {
+  console.error('Supabase Error:', error)
+  
+  if (error?.code === 'PGRST116') {
+    return '未找到相关数据'
+  }
+  if (error?.code === '23505') {
+    return '数据已存在'
+  }
+  if (error?.code === '42501') {
+    return '权限不足'
+  }
+  if (error?.message?.includes('JWT')) {
+    return '登录已过期，请重新登录'
+  }
+  
+  return error?.message || '操作失败，请重试'
+}
+
+// 类型守卫函数
+export const isValidProfile = (data: any): data is Profile => {
+  return data && typeof data.id === 'string' && typeof data.email === 'string'
+}
+
+export const isValidResume = (data: any): data is Resume => {
+  return data && typeof data.id === 'string' && typeof data.user_id === 'string'
+}
+
+export const isValidJobListing = (data: any): data is JobListing => {
+  return data && typeof data.id === 'string' && typeof data.title === 'string'
+}
