@@ -50,7 +50,7 @@ export const SkillRecommender: React.FC = () => {
 
   const fetchRecommendations = async () => {
     if (!resumeData.education.length && !resumeData.experience.length) {
-      toast.info('请先完善教育背景或工作经历')
+      toast('请先完善教育背景或工作经历')
       return
     }
 
@@ -89,7 +89,7 @@ export const SkillRecommender: React.FC = () => {
     )
     
     if (existingSkill) {
-      toast.info('该技能已存在')
+      toast('该技能已存在')
       return
     }
 
