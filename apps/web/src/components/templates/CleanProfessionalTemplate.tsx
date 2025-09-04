@@ -525,7 +525,7 @@ const CleanProfessionalTemplate: React.FC<TemplateProps> = ({ resumeData, isPrev
       )}
 
       {/* 打印样式 */}
-      <style jsx>{`
+      <style>{`
         @media print {
           .bg-white {
             background: white !important;
