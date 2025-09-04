@@ -1,332 +1,304 @@
 // apps/web/src/components/JobRecommendations.tsx
 import React, { useState, useEffect } from 'react'
-import { 
-  Briefcase, 
-  MapPin, 
-  DollarSign, 
-  TrendingUp, 
-  ExternalLink,
-  Loader2,
-  RefreshCw,
-  Filter,
-  Star,
-  Target
-} from 'lucide-react'
-import { useResumeStore } from '../features/resume/state'
-import type { JobRecommendation } from '../types/resume'
-import toast from 'react-hot-toast'
-import JobDetailModal from './JobDetailModal'
+import { MapPin, DollarSign, Clock, Star, TrendingUp } from 'lucide-react'
 
-export const JobRecommendations: React.FC = () => {
-  const { resumeData } = useResumeStore()
+interface JobRecommendation {
+  id: string
+  title: string
+  company: string
+  location: string
+  salaryMin?: number
+  salaryMax?: number
+  matchScore: number
+  matchDetails: {
+    skillMatch: number
+    semanticSimilarity: number
+    experienceMatch: number
+    locationMatch: number
+  }
+  reasons: string[]
+  improvements: string[]
+  description: string
+  requirements: any
+}
+
+const JobRecommendations: React.FC = () => {
   const [recommendations, setRecommendations] = useState<JobRecommendation[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [selectedJob, setSelectedJob] = useState<JobRecommendation | null>(null)
   const [filters, setFilters] = useState({
     location: '',
-    salaryMin: 0,
-    jobType: '',
-    remote: false
+    salaryMin: '',
+    matchScore: 70
   })
-  const [selectedJob, setSelectedJob] = useState<JobRecommendation | null>(null)
-  const [showDetailModal, setShowDetailModal] = useState(false)
 
-  const fetchRecommendations = async () => {
-    if (!resumeData.personalInfo.name) {
-      toast.error('请先完善个人信息')
-      return
-    }
+  useEffect(() => {
+    loadRecommendations()
+  }, [filters])
 
-    setLoading(true)
+  const loadRecommendations = async () => {
     try {
+      setLoading(true)
+      // 这里需要从localStorage或context获取用户的简历ID
+      const resumeId = localStorage.getItem('currentResumeId')
+      const userId = localStorage.getItem('userId')
+
       const response = await fetch('/.netlify/functions/recommend-jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          resume: resumeData,
-          options: {
-            limit: 10,
-            filters: filters.location ? filters : undefined
-          }
+          resumeId,
+          userId,
+          filters
         })
       })
 
       const result = await response.json()
-      
       if (result.success) {
-        setRecommendations(result.data)
-        toast.success(`找到了 ${result.data.length} 个推荐职位！`)
-      } else {
-        throw new Error(result.error || '推荐失败')
+        setRecommendations(result.data.recommendations)
       }
     } catch (error) {
-      console.error('Job recommendations error:', error)
-      toast.error('获取推荐失败，请重试')
-      
-      // 显示模拟数据以便测试
-      setRecommendations([
-        {
-          jobId: '1',
-          title: '前端开发工程师',
-          company: '字节跳动',
-          location: '北京',
-          matchScore: 87,
-          salaryRange: [25000, 40000],
-          requiredSkills: ['JavaScript', 'React', 'TypeScript'],
-          missingSkills: ['Vue.js'],
-          reasons: [
-            { type: 'skill_match', description: '技能匹配度高', weight: 0.8 },
-            { type: 'experience_match', description: '工作经验符合要求', weight: 0.7 }
-          ],
-          growthPotential: 85,
-          applicationUrl: 'https://jobs.bytedance.com/referral/pc/position  '
-        },
-        {
-          jobId: '2',
-          title: 'React开发工程师',
-          company: '腾讯',
-          location: '深圳',
-          matchScore: 82,
-          salaryRange: [22000, 35000],
-          requiredSkills: ['React', 'JavaScript', 'Node.js'],
-          missingSkills: ['GraphQL', 'Docker'],
-          reasons: [
-            { type: 'skill_match', description: 'React技能完美匹配', weight: 0.9 }
-          ],
-          growthPotential: 78
-        }
-      ])
+      console.error('加载推荐失败:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchRecommendations()
-  }, [])
-
-  const getMatchScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 bg-green-50'
-    if (score >= 60) return 'text-yellow-600 bg-yellow-50'
-    return 'text-red-600 bg-red-50'
+  const handleJobClick = (job: JobRecommendation) => {
+    setSelectedJob(job)
+    // 记录点击事件
+    trackJobClick(job.id)
   }
 
-  const formatSalaryRange = (range?: [number, number]) => {
-    if (!range) return '面议'
-    return `${range[0].toLocaleString()} - ${range[1].toLocaleString()} 元/月`
+  const trackJobClick = async (jobId: string) => {
+    try {
+      await fetch('/.netlify/functions/track-interaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'job_click',
+          jobId,
+          userId: localStorage.getItem('userId')
+        })
+      })
+    } catch (error) {
+      console.error('追踪失败:', error)
+    }
+  }
+
+  const getMatchScoreColor = (score: number) => {
+    if (score >= 85) return 'text-green-600 bg-green-100'
+    if (score >= 70) return 'text-blue-600 bg-blue-100'
+    if (score >= 55) return 'text-yellow-600 bg-yellow-100'
+    return 'text-red-600 bg-red-100'
+  }
+
+  const formatSalary = (min?: number, max?: number) => {
+    if (!min && !max) return '薪资面议'
+    if (!max) return `${(min! / 1000).toFixed(0)}K+`
+    if (!min) return `最高${(max! / 1000).toFixed(0)}K`
+    return `${(min! / 1000).toFixed(0)}K-${(max! / 1000).toFixed(0)}K`
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-gray-600">正在为您匹配最适合的职位...</span>
+      </div>
+    )
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
+    <div className="max-w-6xl mx-auto px-6">
+      {/* 筛选器 */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4">筛选条件</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">职位推荐</h1>
-            <p className="text-gray-600 mt-2">基于您的简历为您推荐最匹配的职位</p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              地点
+            </label>
+            <select
+              value={filters.location}
+              onChange={(e) => setFilters({...filters, location: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">所有地点</option>
+              <option value="北京">北京</option>
+              <option value="上海">上海</option>
+              <option value="深圳">深圳</option>
+              <option value="杭州">杭州</option>
+              <option value="广州">广州</option>
+            </select>
           </div>
           
-          <button
-            onClick={fetchRecommendations}
-            disabled={loading}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <RefreshCw className="w-4 h-4 mr-2" />
-            )}
-            {loading ? '分析中...' : '重新分析'}
-          </button>
-        </div>
-
-        {/* 筛选器 */}
-        <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">期望城市</label>
-              <input
-                type="text"
-                value={filters.location}
-                onChange={(e) => setFilters({...filters, location: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                placeholder="如：北京"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">最低薪资</label>
-              <input
-                type="number"
-                value={filters.salaryMin || ''}
-                onChange={(e) => setFilters({...filters, salaryMin: Number(e.target.value)})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                placeholder="20000"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">工作类型</label>
-              <select
-                value={filters.jobType}
-                onChange={(e) => setFilters({...filters, jobType: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              >
-                <option value="">不限</option>
-                <option value="full-time">全职</option>
-                <option value="part-time">兼职</option>
-                <option value="contract">合同</option>
-                <option value="internship">实习</option>
-              </select>
-            </div>
-            
-            <div className="flex items-end">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={filters.remote}
-                  onChange={(e) => setFilters({...filters, remote: e.target.checked})}
-                  className="mr-2"
-                />
-                支持远程工作
-              </label>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              最低薪资 (K)
+            </label>
+            <input
+              type="number"
+              value={filters.salaryMin}
+              onChange={(e) => setFilters({...filters, salaryMin: e.target.value})}
+              placeholder="例: 20"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              最低匹配度: {filters.matchScore}%
+            </label>
+            <input
+              type="range"
+              min="50"
+              max="100"
+              value={filters.matchScore}
+              onChange={(e) => setFilters({...filters, matchScore: parseInt(e.target.value)})}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
           </div>
         </div>
       </div>
 
       {/* 推荐结果 */}
-      {loading ? (
-        <div className="text-center py-12">
-          <Loader2 className="w-8 h-8 mx-auto animate-spin text-blue-600 mb-4" />
-          <p className="text-gray-600">AI正在分析您的简历并匹配最适合的职位...</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {recommendations.map((job) => (
-            <div key={job.jobId} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {recommendations.map((job) => (
+          <div
+            key={job.id}
+            onClick={() => handleJobClick(job)}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+          >
+            <div className="p-6">
+              {/* 职位标题和匹配度 */}
+              <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-semibold text-gray-900">{job.title}</h3>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getMatchScoreColor(job.matchScore)}`}>
-                      {job.matchScore}% 匹配
-                    </span>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    {job.title}
+                  </h3>
+                  <p className="text-gray-600">{job.company}</p>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${getMatchScoreColor(job.matchScore)}`}>
+                  {job.matchScore}% 匹配
+                </div>
+              </div>
+
+              {/* 基本信息 */}
+              <div className="flex flex-wrap items-center gap-4 mb-4 text-sm text-gray-600">
+                {job.location && (
+                  <div className="flex items-center">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    {job.location}
                   </div>
-                  
-                  <div className="flex items-center gap-4 text-gray-600 mb-3">
-                    <div className="flex items-center gap-1">
-                      <Briefcase className="w-4 h-4" />
-                      {job.company}
+                )}
+                <div className="flex items-center">
+                  <DollarSign className="w-4 h-4 mr-1" />
+                  {formatSalary(job.salaryMin, job.salaryMax)}
+                </div>
+                <div className="flex items-center">
+                  <Clock className="w-4 h-4 mr-1" />
+                  全职
+                </div>
+              </div>
+
+              {/* 匹配详情 */}
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span>技能匹配</span>
+                  <div className="flex items-center">
+                    <div className="w-20 h-2 bg-gray-200 rounded-full mr-2">
+                      <div 
+                        className="h-2 bg-blue-500 rounded-full"
+                        style={{ width: `${job.matchDetails.skillMatch}%` }}
+                      />
                     </div>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {job.location}
-                    </div>
-                    {job.salaryRange && (
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" />
-                        {formatSalaryRange(job.salaryRange)}
-                      </div>
-                    )}
+                    <span className="text-gray-600">{job.matchDetails.skillMatch.toFixed(0)}%</span>
                   </div>
                 </div>
                 
-                <div className="text-right">
-                  <div className="flex items-center gap-1 text-green-600 mb-2">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="text-sm font-medium">成长潜力 {job.growthPotential}%</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={() => {
-                        setSelectedJob(job)
-                        setShowDetailModal(true)
-                      }}
-                      className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50"
-                    >
-                      查看详情
-                    </button>
-                    {job.applicationUrl && (
-                      <a
-                        href={job.applicationUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                      >
-                        立即申请
-                        <ExternalLink className="w-4 h-4 ml-2" />
-                      </a>
-                    )}
+                <div className="flex items-center justify-between text-sm">
+                  <span>经验匹配</span>
+                  <div className="flex items-center">
+                    <div className="w-20 h-2 bg-gray-200 rounded-full mr-2">
+                      <div 
+                        className="h-2 bg-green-500 rounded-full"
+                        style={{ width: `${job.matchDetails.experienceMatch}%` }}
+                      />
+                    </div>
+                    <span className="text-gray-600">{job.matchDetails.experienceMatch.toFixed(0)}%</span>
                   </div>
                 </div>
               </div>
 
-              {/* 技能匹配分析 */}
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium text-green-700 mb-2 flex items-center">
-                    <Star className="w-4 h-4 mr-1" />
-                    匹配技能
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {job.requiredSkills.slice(0, 6).map((skill, index) => (
-                      <span key={index} className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-orange-700 mb-2 flex items-center">
-                    <Target className="w-4 h-4 mr-1" />
-                    需要提升
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {job.missingSkills.slice(0, 4).map((skill, index) => (
-                      <span key={index} className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-sm">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              {/* 匹配原因 */}
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">匹配原因:</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  {job.reasons.slice(0, 2).map((reason, index) => (
+                    <li key={index} className="flex items-start">
+                      <Star className="w-3 h-3 mr-2 mt-0.5 text-yellow-500 flex-shrink-0" />
+                      {reason}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              {/* 推荐理由 */}
-              {job.reasons && job.reasons.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <h4 className="font-medium text-gray-700 mb-2">推荐理由</h4>
-                  <ul className="space-y-1">
-                    {job.reasons.map((reason, index) => (
-                      <li key={index} className="text-sm text-gray-600 flex items-center">
-                        <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
-                        {reason.description}
+              {/* 改进建议 */}
+              {job.improvements.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">提升建议:</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    {job.improvements.slice(0, 2).map((improvement, index) => (
+                      <li key={index} className="flex items-start">
+                        <TrendingUp className="w-3 h-3 mr-2 mt-0.5 text-blue-500 flex-shrink-0" />
+                        {improvement}
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
+
+              {/* 操作按钮 */}
+              <div className="flex gap-2 pt-4 border-t border-gray-100">
+                <button 
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    window.open(`/jobs/${job.id}`, '_blank')
+                  }}
+                >
+                  查看详情
+                </button>
+                <button 
+                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    // 添加到收藏
+                  }}
+                >
+                  收藏
+                </button>
+              </div>
             </div>
-          ))}
-          
-          {recommendations.length === 0 && !loading && (
-            <div className="text-center py-12 text-gray-500">
-              <Briefcase className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium mb-2">暂无推荐职位</h3>
-              <p>请完善您的简历信息后重新获取推荐</p>
-            </div>
-          )}
+          </div>
+        ))}
+      </div>
+
+      {recommendations.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <MapPin className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">暂无匹配职位</h3>
+          <p className="text-gray-600 mb-4">
+            尝试调整筛选条件或完善您的简历信息
+          </p>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+            完善简历
+          </button>
         </div>
       )}
-      
-      {/* 职位详情模态框 */}
-      <JobDetailModal
-        job={selectedJob}
-        isOpen={showDetailModal}
-        onClose={() => {
-          setShowDetailModal(false)
-          setSelectedJob(null)
-        }}
-      />
     </div>
   )
 }
