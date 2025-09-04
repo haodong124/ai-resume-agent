@@ -88,11 +88,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     try {
       if (format === 'pdf') {
         const exporter = new PDFExporter()
-        await exporter.exportToPDF(previewElement, resumeData.personalInfo.name)
+        await PDFExporter.exportToPDF(previewElement, { filename: resumeData.personalInfo.name })
         toast.success('PDF 导出成功！')
       } else if (format === 'png') {
         const exporter = new PDFExporter()
-        await exporter.exportToImage(previewElement, resumeData.personalInfo.name)
+        await PDFExporter.exportToImage(previewElement, 'png')
         toast.success('图片导出成功！')
       } else if (format === 'docx') {
         toast('Word 导出功能即将推出')
@@ -223,7 +223,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               onClick={() => {
                 if (previewElement) {
                   const helper = new PrintHelper()
-                  helper.print(previewElement)
+                  PrintHelper.print(previewElement)
                 }
               }}
               className="w-full p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center gap-2"
