@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { FileDown, Loader2 } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
-import { ResumeData } from '../App'
+import { ResumeData } from '../types/resume'
 
 interface PDFExportProps {
   resumeData: ResumeData
