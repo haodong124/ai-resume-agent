@@ -401,6 +401,7 @@ const InterviewSimulator: React.FC = () => {
                   </button>
                 )}
               </div>
+            </div>
           </div>
 
           {/* 评估结果 */}
