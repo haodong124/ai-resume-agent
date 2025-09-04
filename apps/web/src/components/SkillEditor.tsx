@@ -1,6 +1,5 @@
-// apps/web/src/components/SkillEditor.tsx
 import React, { useState } from 'react'
-import { Plus, Trash2, Sparkles } from 'lucide-react'
+import { Plus, Trash2, Sparkles, Award } from 'lucide-react'
 import type { Skill } from '../types/resume'
 
 interface SkillEditorProps {
@@ -12,7 +11,7 @@ export const SkillEditor: React.FC<SkillEditorProps> = ({ skills, onChange }) =>
   const [isAdding, setIsAdding] = useState(false)
   const [newSkill, setNewSkill] = useState<Partial<Skill>>({
     name: '',
-    level: 'intermediate',
+    level: 'Intermediate',
     category: '技术技能'
   })
 
@@ -26,10 +25,10 @@ export const SkillEditor: React.FC<SkillEditorProps> = ({ skills, onChange }) =>
   ]
 
   const levelLabels = {
-    beginner: '初级',
-    intermediate: '中级', 
-    advanced: '高级',
-    expert: '专家'
+    Beginner: '初级',
+    Intermediate: '中级', 
+    Advanced: '高级',
+    Expert: '专家'
   }
 
   const handleAddSkill = () => {
@@ -44,7 +43,7 @@ export const SkillEditor: React.FC<SkillEditorProps> = ({ skills, onChange }) =>
     }
 
     onChange([...skills, skill])
-    setNewSkill({ name: '', level: 'intermediate', category: '技术技能' })
+    setNewSkill({ name: '', level: 'Intermediate', category: '技术技能' })
     setIsAdding(false)
   }
 
