@@ -1,385 +1,287 @@
 // apps/web/src/components/InterviewSimulator.tsx
-import React, { useState, useEffect } from 'react'
-import { 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  MessageCircle, 
-  Clock, 
-  Award,
-  Mic,
-  MicOff,
-  ArrowRight
-} from 'lucide-react'
-import toast from 'react-hot-toast'
+import React, { useState, useEffect, useRef } from 'react'
+import { Play, Pause, RotateCcw, Mic, MicOff, Clock, CheckCircle } from 'lucide-react'
 
 interface Question {
   id: string
-  text: string
-  category: 'behavioral' | 'technical' | 'situational'
-  difficulty: 'easy' | 'medium' | 'hard'
+  content: string
+  type: 'technical' | 'behavioral' | 'situational'
   timeLimit: number
+  expectedPoints: string[]
 }
 
 interface Answer {
   questionId: string
   content: string
-  timeUsed: number
-  score?: number
-  feedback?: string
+  audioUrl?: string
+  submittedAt: Date
 }
 
-interface InterviewSession {
-  id: string
-  jobType: string
-  difficulty: string
-  questions: Question[]
-  answers: Answer[]
-  currentQuestionIndex: number
-  status: 'not-started' | 'in-progress' | 'completed'
-  startTime?: Date
-  endTime?: Date
+interface Evaluation {
+  score: number
+  strengths: string[]
+  improvements: string[]
+  feedback: string
+  nextSteps: string[]
 }
 
-export const InterviewSimulator: React.FC = () => {
-  const [session, setSession] = useState<InterviewSession | null>(null)
-  const [currentAnswer, setCurrentAnswer] = useState('')
+const InterviewSimulator: React.FC = () => {
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null)
+  const [answer, setAnswer] = useState('')
   const [timeLeft, setTimeLeft] = useState(0)
   const [isRecording, setIsRecording] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [isTimerActive, setIsTimerActive] = useState(false)
+  const [evaluation, setEvaluation] = useState<Evaluation | null>(null)
+  const [questionNumber, setQuestionNumber] = useState(1)
+  const [totalQuestions, setTotalQuestions] = useState(5)
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [config, setConfig] = useState({
+    jobType: 'frontend',
+    difficulty: 'intermediate' as 'beginner' | 'intermediate' | 'advanced'
+  })
 
-  const jobTypes = [
-    { id: 'frontend', name: '前端开发', icon: '💻' },
-    { id: 'backend', name: '后端开发', icon: '⚙️' },
-    { id: 'fullstack', name: '全栈开发', icon: '🔄' },
-    { id: 'product', name: '产品经理', icon: '📱' },
-    { id: 'design', name: 'UI/UX设计', icon: '🎨' },
-    { id: 'data', name: '数据分析', icon: '📊' }
-  ]
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
 
-  const difficulties = [
-    { id: 'beginner', name: '初级', description: '适合应届生和初级职位' },
-    { id: 'intermediate', name: '中级', description: '适合有1-3年经验' },
-    { id: 'senior', name: '高级', description: '适合资深专业人士' }
-  ]
+  useEffect(() => {
+    if (isTimerActive && timeLeft > 0) {
+      timerRef.current = setTimeout(() => {
+        setTimeLeft(prev => prev - 1)
+      }, 1000)
+    } else if (timeLeft === 0 && isTimerActive) {
+      handleTimeUp()
+    }
 
-  const startInterview = async (jobType: string, difficulty: string) => {
-    setLoading(true)
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [timeLeft, isTimerActive])
+
+  const startInterview = async () => {
     try {
       const response = await fetch('/.netlify/functions/interview-start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ job_type: jobType, difficulty_level: difficulty })
+        body: JSON.stringify({
+          job_type: config.jobType,
+          difficulty_level: config.difficulty
+        })
       })
 
       const result = await response.json()
-      
       if (result.success) {
-        setSession({
-          id: result.data.session_id,
-          jobType,
-          difficulty,
-          questions: result.data.questions || generateMockQuestions(jobType, difficulty),
-          answers: [],
-          currentQuestionIndex: 0,
-          status: 'in-progress',
-          startTime: new Date()
-        })
-        toast.success('面试开始！')
-      } else {
-        throw new Error(result.error)
+        setSessionId(result.data.session_id)
+        setTotalQuestions(result.data.total_questions)
+        await loadNextQuestion(result.data.session_id)
       }
     } catch (error) {
-      console.error('Start interview error:', error)
-      // 使用模拟数据
-      setSession({
-        id: 'mock-session-' + Date.now(),
-        jobType,
-        difficulty,
-        questions: generateMockQuestions(jobType, difficulty),
-        answers: [],
-        currentQuestionIndex: 0,
-        status: 'in-progress',
-        startTime: new Date()
-      })
-      toast.success('模拟面试开始！')
-    } finally {
-      setLoading(false)
+      console.error('开始面试失败:', error)
     }
   }
 
-  const generateMockQuestions = (jobType: string, difficulty: string): Question[] => {
-    const questions: Record<string, Question[]> = {
-      frontend: [
-        {
-          id: '1',
-          text: '请简单介绍一下自己，以及为什么想要应聘前端开发这个职位？',
-          category: 'behavioral',
-          difficulty: 'easy',
-          timeLimit: 180
-        },
-        {
-          id: '2', 
-          text: '请解释一下JavaScript中的闭包概念，并举个实际应用的例子。',
-          category: 'technical',
-          difficulty: 'medium',
-          timeLimit: 300
-        },
-        {
-          id: '3',
-          text: '如果你发现网站加载速度很慢，你会怎样排查和优化？',
-          category: 'situational',
-          difficulty: 'medium',
-          timeLimit: 240
-        }
-      ],
-      backend: [
-        {
-          id: '1',
-          text: '请介绍一下自己的后端开发经验。',
-          category: 'behavioral',
-          difficulty: 'easy',
-          timeLimit: 180
-        },
-        {
-          id: '2',
-          text: '解释一下RESTful API的设计原则。',
-          category: 'technical',
-          difficulty: 'medium',
-          timeLimit: 300
-        }
-      ]
+  const loadNextQuestion = async (sessionId: string) => {
+    try {
+      const response = await fetch('/.netlify/functions/interview-next-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId })
+      })
+
+      const result = await response.json()
+      if (result.success && result.data.question) {
+        setCurrentQuestion(result.data.question)
+        setTimeLeft(result.data.question.timeLimit)
+        setIsTimerActive(true)
+        setEvaluation(null)
+        setAnswer('')
+      } else if (result.data.completed) {
+        setIsCompleted(true)
+        setIsTimerActive(false)
+      }
+    } catch (error) {
+      console.error('加载问题失败:', error)
     }
-    
-    return questions[jobType] || questions.frontend
   }
 
   const submitAnswer = async () => {
-    if (!session || !currentAnswer.trim()) return
+    if (!sessionId || !currentQuestion || !answer.trim()) return
 
-    const answer: Answer = {
-      questionId: session.questions[session.currentQuestionIndex].id,
-      content: currentAnswer,
-      timeUsed: session.questions[session.currentQuestionIndex].timeLimit - timeLeft
+    setIsTimerActive(false)
+
+    const answerData: Answer = {
+      questionId: currentQuestion.id,
+      content: answer,
+      submittedAt: new Date()
     }
 
-    const updatedSession = {
-      ...session,
-      answers: [...session.answers, answer],
-      currentQuestionIndex: session.currentQuestionIndex + 1
-    }
+    try {
+      const response = await fetch('/.netlify/functions/interview-submit-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          ...answerData
+        })
+      })
 
-    if (updatedSession.currentQuestionIndex >= session.questions.length) {
-      updatedSession.status = 'completed'
-      updatedSession.endTime = new Date()
-      toast.success('面试完成！')
-    }
-
-    setSession(updatedSession)
-    setCurrentAnswer('')
-    setTimeLeft(0)
-  }
-
-  const resetInterview = () => {
-    setSession(null)
-    setCurrentAnswer('')
-    setTimeLeft(0)
-  }
-
-  // 计时器
-  useEffect(() => {
-    if (session?.status === 'in-progress' && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [session, timeLeft])
-
-  // 开始新问题时重置计时器
-  useEffect(() => {
-    if (session?.status === 'in-progress') {
-      const currentQuestion = session.questions[session.currentQuestionIndex]
-      if (currentQuestion) {
-        setTimeLeft(currentQuestion.timeLimit)
+      const result = await response.json()
+      if (result.success) {
+        setEvaluation(result.data)
+        setQuestionNumber(prev => prev + 1)
       }
+    } catch (error) {
+      console.error('提交答案失败:', error)
     }
-  }, [session?.currentQuestionIndex])
+  }
+
+  const handleTimeUp = () => {
+    setIsTimerActive(false)
+    if (answer.trim()) {
+      submitAnswer()
+    } else {
+      setEvaluation({
+        score: 0,
+        strengths: [],
+        improvements: ['回答时间不足', '需要更好的时间管理'],
+        feedback: '由于时间不足，未能完成回答。建议提前准备并练习控制回答时间。',
+        nextSteps: ['练习在限定时间内组织答案', '准备核心要点']
+      })
+    }
+  }
+
+  const nextQuestion = () => {
+    if (sessionId) {
+      loadNextQuestion(sessionId)
+    }
+  }
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+      
+      audioChunksRef.current = []
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' })
+        // 这里可以将音频上传到服务器或转换为文字
+        stream.getTracks().forEach(track => track.stop())
+      }
+
+      mediaRecorderRef.current = mediaRecorder
+      mediaRecorder.start()
+      setIsRecording(true)
+    } catch (error) {
+      console.error('录音失败:', error)
+      alert('无法访问麦克风，请检查权限设置')
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+    }
+  }
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
 
-  // 如果没有开始面试，显示选择界面
-  if (!session) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">AI模拟面试</h1>
-          <p className="text-gray-600">选择职位类型和难度，开始你的面试练习</p>
-        </div>
-
-        <div className="space-y-8">
-          {/* 职位类型选择 */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">选择职位类型</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {jobTypes.map((type) => (
-                <button
-                  key={type.id}
-                  onClick={() => {/* 临时存储选择 */}}
-                  className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left"
-                >
-                  <div className="text-2xl mb-2">{type.icon}</div>
-                  <div className="font-medium">{type.name}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 难度选择 */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">选择难度级别</h2>
-            <div className="space-y-3">
-              {difficulties.map((diff) => (
-                <div
-                  key={diff.id}
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium">{diff.name}</div>
-                      <div className="text-sm text-gray-600">{diff.description}</div>
-                    </div>
-                    <button
-                      onClick={() => startInterview('frontend', diff.id)}
-                      disabled={loading}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {loading ? '准备中...' : '开始面试'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+  const getScoreColor = (score: number) => {
+    if (score >= 85) return 'text-green-600'
+    if (score >= 70) return 'text-blue-600'
+    if (score >= 55) return 'text-yellow-600'
+    return 'text-red-600'
   }
 
-  const currentQuestion = session.questions[session.currentQuestionIndex]
-  const progress = ((session.currentQuestionIndex + 1) / session.questions.length) * 100
+  const getQuestionTypeColor = (type: string) => {
+    const colors = {
+      technical: 'bg-blue-100 text-blue-800',
+      behavioral: 'bg-green-100 text-green-800',
+      situational: 'bg-purple-100 text-purple-800'
+    }
+    return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+  }
 
-  // 面试进行中
-  if (session.status === 'in-progress') {
+  if (!sessionId) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        {/* 面试头部信息 */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-center mb-6">模拟面试设置</h2>
+          
+          <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-semibold">模拟面试进行中</h1>
-              <p className="text-gray-600">
-                问题 {session.currentQuestionIndex + 1} / {session.questions.length}
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center text-gray-600">
-                <Clock className="w-4 h-4 mr-2" />
-                <span className={timeLeft <= 30 ? 'text-red-600 font-medium' : ''}>
-                  {formatTime(timeLeft)}
-                </span>
-              </div>
-              
-              <button
-                onClick={resetInterview}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                职位类型
+              </label>
+              <select
+                value={config.jobType}
+                onChange={(e) => setConfig({...config, jobType: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                重新开始
-              </button>
+                <option value="frontend">前端开发</option>
+                <option value="backend">后端开发</option>
+                <option value="fullstack">全栈开发</option>
+                <option value="mobile">移动开发</option>
+                <option value="devops">运维工程师</option>
+                <option value="data">数据分析师</option>
+                <option value="product">产品经理</option>
+              </select>
             </div>
-          </div>
-          
-          {/* 进度条 */}
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-        </div>
 
-        {/* 当前问题 */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <div className="flex items-start space-x-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <MessageCircle className="w-5 h-5 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  currentQuestion.category === 'technical' ? 'bg-red-100 text-red-700' :
-                  currentQuestion.category === 'behavioral' ? 'bg-blue-100 text-blue-700' :
-                  'bg-green-100 text-green-700'
-                }`}>
-                  {currentQuestion.category === 'technical' ? '技术问题' :
-                   currentQuestion.category === 'behavioral' ? '行为问题' : '情景问题'}
-                </span>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  currentQuestion.difficulty === 'hard' ? 'bg-red-100 text-red-700' :
-                  currentQuestion.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-green-100 text-green-700'
-                }`}>
-                  {currentQuestion.difficulty === 'hard' ? '困难' :
-                   currentQuestion.difficulty === 'medium' ? '中等' : '简单'}
-                </span>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                难度等级
+              </label>
+              <div className="flex space-x-4">
+                {[
+                  { value: 'beginner', label: '初级' },
+                  { value: 'intermediate', label: '中级' },
+                  { value: 'advanced', label: '高级' }
+                ].map((level) => (
+                  <label key={level.value} className="flex items-center">
+                    <input
+                      type="radio"
+                      value={level.value}
+                      checked={config.difficulty === level.value}
+                      onChange={(e) => setConfig({...config, difficulty: e.target.value as any})}
+                      className="mr-2"
+                    />
+                    {level.label}
+                  </label>
+                ))}
               </div>
-              <p className="text-lg text-gray-900 leading-relaxed">
-                {currentQuestion.text}
-              </p>
             </div>
-          </div>
-        </div>
 
-        {/* 回答区域 */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">您的回答</h3>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsRecording(!isRecording)}
-                className={`p-2 rounded-lg ${
-                  isRecording ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
-                }`}
-                title={isRecording ? '停止录音' : '开始录音'}
-              >
-                {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              </button>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-medium text-blue-900 mb-2">面试说明:</h3>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• 总共{totalQuestions}道题目，包含技术和行为问题</li>
+                <li>• 每题有时间限制，请合理安排回答时间</li>
+                <li>• 支持文字和语音回答（可选）</li>
+                <li>• 完成后会提供详细的评估报告</li>
+              </ul>
             </div>
-          </div>
-          
-          <textarea
-            value={currentAnswer}
-            onChange={(e) => setCurrentAnswer(e.target.value)}
-            className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="请在这里输入您的回答..."
-          />
-          
-          <div className="flex justify-between items-center mt-4">
-            <p className="text-sm text-gray-500">
-              建议回答时间：{formatTime(currentQuestion.timeLimit)}
-            </p>
-            
+
             <button
-              onClick={submitAnswer}
-              disabled={!currentAnswer.trim()}
-              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              onClick={startInterview}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
             >
-              下一题
-              <ArrowRight className="w-4 h-4 ml-2" />
+              <Play className="w-5 h-5 mr-2" />
+              开始面试
             </button>
           </div>
         </div>
@@ -387,70 +289,185 @@ export const InterviewSimulator: React.FC = () => {
     )
   }
 
-  // 面试完成
+  if (isCompleted) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-4">面试完成！</h2>
+          <p className="text-gray-600 mb-6">
+            恭喜您完成了模拟面试，正在生成详细的评估报告...
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+          >
+            开始新的面试
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Award className="w-8 h-8 text-green-600" />
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">面试完成！</h1>
-        <p className="text-gray-600">恭喜您完成了这次模拟面试</p>
-      </div>
+      {currentQuestion && (
+        <div className="bg-white rounded-lg shadow-lg">
+          {/* 进度条 */}
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">
+                问题 {questionNumber} / {totalQuestions}
+              </span>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-gray-500" />
+                <span className={`text-sm font-mono ${timeLeft <= 60 ? 'text-red-600' : 'text-gray-600'}`}>
+                  {formatTime(timeLeft)}
+                </span>
+              </div>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${(questionNumber - 1) / totalQuestions * 100}%` }}
+              />
+            </div>
+          </div>
 
-      {/* 面试总结 */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">面试总结</h2>
-        <div className="grid grid-cols-3 gap-6 text-center">
-          <div>
-            <div className="text-2xl font-bold text-blue-600">
-              {session.questions.length}
-            </div>
-            <div className="text-sm text-gray-600">总题数</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-green-600">
-              {Math.round((session.answers.reduce((sum, a) => sum + (a.score || 75), 0) / session.answers.length))}%
-            </div>
-            <div className="text-sm text-gray-600">平均得分</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-purple-600">
-              {session.endTime && session.startTime ? 
-                Math.round((session.endTime.getTime() - session.startTime.getTime()) / 60000) : 0}
-            </div>
-            <div className="text-sm text-gray-600">用时(分钟)</div>
-          </div>
-        </div>
-      </div>
-
-      {/* 详细反馈 */}
-      <div className="space-y-4">
-        {session.questions.map((question, index) => (
-          <div key={question.id} className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="font-semibold">问题 {index + 1}</h3>
-              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
-                得分: {session.answers[index]?.score || 75}%
+          {/* 问题内容 */}
+          <div className="p-6">
+            <div className="flex items-center mb-4">
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getQuestionTypeColor(currentQuestion.type)}`}>
+                {currentQuestion.type === 'technical' ? '技术问题' :
+                 currentQuestion.type === 'behavioral' ? '行为问题' : '情境问题'}
               </span>
             </div>
-            <p className="text-gray-700 mb-3">{question.text}</p>
-            <div className="bg-gray-50 p-3 rounded">
-              <p className="text-sm text-gray-600">您的回答：</p>
-              <p className="mt-1">{session.answers[index]?.content || '未回答'}</p>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      <div className="text-center mt-8">
-        <button
-          onClick={resetInterview}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          开始新的面试
-        </button>
-      </div>
+            <h3 className="text-lg font-semibold mb-6">
+              {currentQuestion.content}
+            </h3>
+
+            {/* 回答区域 */}
+            <div className="space-y-4">
+              <textarea
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="请输入您的回答..."
+                className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                disabled={!isTimerActive}
+              />
+
+              {/* 录音控制 */}
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                    isRecording 
+                      ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  disabled={!isTimerActive}
+                >
+                  {isRecording ? <MicOff className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
+                  {isRecording ? '停止录音' : '开始录音'}
+                </button>
+                
+                <span className="text-sm text-gray-500">
+                  {isRecording && (
+                    <span className="flex items-center">
+                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></div>
+                      正在录音...
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              {/* 操作按钮 */}
+              <div className="flex justify-end space-x-3">
+                {!evaluation ? (
+                  <button
+                    onClick={submitAnswer}
+                    disabled={!answer.trim() || !isTimerActive}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    提交回答
+                  </button>
+                ) : (
+                  <button
+                    onClick={nextQuestion}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    下一题
+                  </button>
+                )}
+              </div>
+          </div>
+
+          {/* 评估结果 */}
+          {evaluation && (
+            <div className="border-t border-gray-200 p-6 bg-gray-50">
+              <h4 className="text-lg font-semibold mb-4">回答评估</h4>
+              
+              {/* 分数 */}
+              <div className="flex items-center mb-4">
+                <span className="text-sm font-medium text-gray-700 mr-3">总分:</span>
+                <span className={`text-2xl font-bold ${getScoreColor(evaluation.score)}`}>
+                  {evaluation.score}
+                </span>
+                <span className="text-gray-500 ml-1">/100</span>
+              </div>
+
+              {/* 详细反馈 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* 优点 */}
+                <div>
+                  <h5 className="font-medium text-green-700 mb-2">优点</h5>
+                  <ul className="text-sm space-y-1">
+                    {evaluation.strengths.map((strength, index) => (
+                      <li key={index} className="flex items-start">
+                        <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        {strength}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* 改进点 */}
+                <div>
+                  <h5 className="font-medium text-orange-700 mb-2">改进建议</h5>
+                  <ul className="text-sm space-y-1">
+                    {evaluation.improvements.map((improvement, index) => (
+                      <li key={index} className="flex items-start">
+                        <div className="w-4 h-4 border-2 border-orange-500 rounded-full mr-2 mt-0.5 flex-shrink-0" />
+                        {improvement}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* 详细反馈 */}
+              <div className="bg-white p-4 rounded-lg mb-4">
+                <h5 className="font-medium mb-2">详细反馈</h5>
+                <p className="text-sm text-gray-700">{evaluation.feedback}</p>
+              </div>
+
+              {/* 下一步建议 */}
+              <div>
+                <h5 className="font-medium mb-2">下一步建议</h5>
+                <ul className="text-sm space-y-1">
+                  {evaluation.nextSteps.map((step, index) => (
+                    <li key={index} className="flex items-start">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2 flex-shrink-0" />
+                      {step}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
