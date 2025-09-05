@@ -1,4 +1,4 @@
-// apps/web/src/pages/EditorPage.tsx (最终完整版)
+// apps/web/src/pages/EditorPage.tsx
 import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
@@ -11,6 +11,8 @@ import ResumeAnalyzer from '../components/ResumeAnalyzer'
 import JobMatchAnalysis from '../components/JobMatchAnalysis'
 import AIAssistant from '../components/AIAssistant'
 import toast from 'react-hot-toast'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 
 const StandardTemplate = lazy(() => import('../components/templates/StandardTemplate'))
 const AmericanBusinessTemplate = lazy(() => import('../components/templates/AmericanBusinessTemplate'))
@@ -26,13 +28,56 @@ const EditorPage: React.FC = () => {
   const [rightPanelContent, setRightPanelContent] = useState<'preview' | 'analyzer' | 'jobmatch' | 'ai'>('preview')
   const [isSaving, setIsSaving] = useState(false)
 
+  // 页面加载时，确保简历ID存在
+  useEffect(() => {
+    const resumeId = localStorage.getItem('currentResumeId')
+    if (!resumeId && resumeData.personalInfo.name) {
+      // 如果没有ID但有数据，生成一个新ID
+      const newResumeId = `resume_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      localStorage.setItem('currentResumeId', newResumeId)
+    }
+  }, [resumeData])
+
   const handleSave = async () => {
     setIsSaving(true)
     try {
+      // 生成或获取简历ID
+      let resumeId = localStorage.getItem('currentResumeId')
+      if (!resumeId) {
+        resumeId = `resume_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        localStorage.setItem('currentResumeId', resumeId)
+      }
+
+      // 保存完整的简历数据
       localStorage.setItem('resumeData', JSON.stringify(resumeData))
+      localStorage.setItem('currentResumeData', JSON.stringify(resumeData))
       localStorage.setItem('selectedTemplate', selectedTemplate)
+      
+      // 保存关键信息供其他功能使用
+      localStorage.setItem('userJobTitle', resumeData.personalInfo.title || '')
+      localStorage.setItem('userLocation', resumeData.personalInfo.location || '')
+      localStorage.setItem('userSkills', JSON.stringify(resumeData.skills || []))
+      
+      // 如果有用户ID，也保存关联
+      const userId = localStorage.getItem('userId')
+      if (userId) {
+        localStorage.setItem(`resume_${userId}`, JSON.stringify({
+          id: resumeId,
+          data: resumeData,
+          template: selectedTemplate,
+          updatedAt: new Date().toISOString()
+        }))
+      }
+
       toast.success('保存成功！')
+      console.log('简历已保存:', {
+        id: resumeId,
+        title: resumeData.personalInfo.title,
+        location: resumeData.personalInfo.location,
+        skills: resumeData.skills?.length || 0
+      })
     } catch (error) {
+      console.error('保存失败:', error)
       toast.error('保存失败')
     } finally {
       setIsSaving(false)
@@ -47,9 +92,6 @@ const EditorPage: React.FC = () => {
     }
 
     try {
-      const html2canvas = (await import('html2canvas')).default
-      const jsPDF = (await import('jspdf')).default
-      
       const canvas = await html2canvas(previewElement, {
         scale: 2,
         useCORS: true,
@@ -85,7 +127,7 @@ const EditorPage: React.FC = () => {
       {/* 顶部导航栏 */}
       <header className="h-16 bg-white border-b shadow-sm z-10">
         <div className="h-full px-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate('/')}
               className="p-2 hover:bg-gray-100 rounded-lg transition"
@@ -93,119 +135,86 @@ const EditorPage: React.FC = () => {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-xl font-semibold">简历编辑器</h1>
+            {resumeData.personalInfo.title && (
+              <span className="text-sm text-gray-500">
+                当前职位: {resumeData.personalInfo.title}
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* 模板选择 */}
-            <div className="relative">
-              <select
-                value={selectedTemplate}
-                onChange={(e) => setTemplate(e.target.value)}
-                className="appearance-none px-4 py-2 pr-10 bg-gray-50 border rounded-lg cursor-pointer hover:bg-gray-100 transition text-sm"
-              >
-                {Object.entries(TEMPLATES).map(([key, template]) => (
-                  <option key={key} value={key}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-500" />
-            </div>
-
-            <div className="w-px h-6 bg-gray-300" />
-
-            {/* 右侧面板切换按钮 */}
-            <div className="flex gap-1">
-              {panelButtons.map((button) => {
-                const Icon = button.icon
-                return (
-                  <button
-                    key={button.id}
-                    onClick={() => setRightPanelContent(button.id as any)}
-                    className={`p-2 rounded-lg transition ${
-                      rightPanelContent === button.id 
-                        ? `bg-${button.color}-100 text-${button.color}-600` 
-                        : 'hover:bg-gray-100'
-                    }`}
-                    title={button.title}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </button>
-                )
-              })}
-            </div>
-
-            <div className="w-px h-6 bg-gray-300" />
-
-            {/* 操作按钮 */}
+          <div className="flex items-center space-x-3">
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2 text-sm"
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-4 h-4 mr-2" />
               {isSaving ? '保存中...' : '保存'}
             </button>
-
+            
             <button
               onClick={handleExport}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2 text-sm"
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4 mr-2" />
               导出PDF
             </button>
           </div>
         </div>
       </header>
 
-      {/* 主要内容区域 */}
+      {/* 主体内容 */}
       <div className="flex-1 flex overflow-hidden">
-        {/* 编辑器 */}
-        <div className="w-1/2 border-r border-gray-200">
+        {/* 左侧编辑器 */}
+        <div className="w-1/2 bg-white border-r overflow-y-auto">
           <ResumeEditor />
         </div>
 
         {/* 右侧面板 */}
-        <div className="w-1/2 bg-white overflow-hidden flex flex-col">
-          {rightPanelContent === 'preview' && (
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="mb-4 text-center">
-                <h2 className="text-lg font-semibold text-gray-700">简历预览</h2>
-              </div>
-              
-              <div id="resume-preview" className="bg-white">
-                <Suspense fallback={
-                  <div className="flex items-center justify-center h-64">
-                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                  </div>
-                }>
-                  <SelectedTemplate resumeData={resumeData} isPreview={true} />
+        <div className="w-1/2 flex flex-col bg-white">
+          {/* 面板切换按钮 */}
+          <div className="flex border-b">
+            {panelButtons.map((btn) => {
+              const Icon = btn.icon
+              return (
+                <button
+                  key={btn.id}
+                  onClick={() => setRightPanelContent(btn.id as any)}
+                  className={`flex-1 flex items-center justify-center py-3 transition-colors ${
+                    rightPanelContent === btn.id
+                      ? `bg-${btn.color}-50 text-${btn.color}-600 border-b-2 border-${btn.color}-600`
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 mr-2" />
+                  {btn.title}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* 面板内容 */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {rightPanelContent === 'preview' && (
+              <div id="resume-preview">
+                <Suspense fallback={<Loader2 className="w-8 h-8 animate-spin mx-auto" />}>
+                  <SelectedTemplate data={resumeData} />
                 </Suspense>
               </div>
-            </div>
-          )}
-
-          {rightPanelContent === 'analyzer' && (
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="mb-4 text-center">
-                <h2 className="text-lg font-semibold text-gray-700">简历分析</h2>
-              </div>
-              <ResumeAnalyzer />
-            </div>
-          )}
-
-          {rightPanelContent === 'jobmatch' && (
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="mb-4 text-center">
-                <h2 className="text-lg font-semibold text-gray-700">职位匹配分析</h2>
-              </div>
-              <JobMatchAnalysis />
-            </div>
-          )}
-
-          {rightPanelContent === 'ai' && (
-            <AIAssistant />
-          )}
+            )}
+            
+            {rightPanelContent === 'analyzer' && (
+              <ResumeAnalyzer resumeData={resumeData} />
+            )}
+            
+            {rightPanelContent === 'jobmatch' && (
+              <JobMatchAnalysis resumeData={resumeData} />
+            )}
+            
+            {rightPanelContent === 'ai' && (
+              <AIAssistant resumeData={resumeData} />
+            )}
+          </div>
         </div>
       </div>
     </div>
