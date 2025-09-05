@@ -23,21 +23,21 @@ const HomeMainPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+      {/* Hero Section - 移除了多余的padding和margin */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 pt-20 pb-16">
         <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-8">
             让 <span className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">AI</span> 助力
             <br />你的职场之路
           </h1>
           
-          <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed px-4">
             从简历制作到职业规划，从技能提升到面试准备
-            <br />
+            <br className="hidden sm:block" />
             一站式AI职业发展平台，让每一步都更精准
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
             <button
               onClick={() => navigate('/editor')}
               className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all text-lg font-semibold"
@@ -54,8 +54,8 @@ const HomeMainPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 功能卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 mb-20">
+        {/* 功能卡片 - 改进响应式布局 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-20 px-4 max-w-7xl mx-auto">
           {[
             {
               path: '/editor',
@@ -104,8 +104,9 @@ const HomeMainPage: React.FC = () => {
               className="group cursor-pointer"
             >
               <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 p-6 h-full">
-                <div className={`w-14 h-14 bg-${feature.color}-100 rounded-xl mx-auto mb-6 flex items-center justify-center group-hover:bg-${feature.color}-200 transition-colors`}>
+                <div className={`w-14 h-14 bg-${feature.color}-100 rounded-xl mx-auto mb-4 flex items-center justify-center group-hover:bg-${feature.color}-200 transition-colors`}>
                   <div className={`w-7 h-7 text-${feature.color}-600`}>
+                    {/* SVG图标代码保持不变 */}
                     {feature.icon === 'User' && (
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -134,14 +135,14 @@ const HomeMainPage: React.FC = () => {
                   </div>
                 </div>
                 
-                <h3 className="text-xl font-semibold mb-3 text-center">{feature.title}</h3>
-                <p className="text-gray-600 text-sm text-center mb-4">{feature.description}</p>
+                <h3 className="text-lg font-semibold mb-2 text-center">{feature.title}</h3>
+                <p className="text-gray-600 text-xs sm:text-sm text-center mb-4">{feature.description}</p>
                 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {feature.features.map((feat, index) => (
                     <div key={index} className="flex items-center text-xs text-gray-500">
-                      <div className={`w-1.5 h-1.5 bg-${feature.color}-400 rounded-full mr-2`}></div>
-                      {feat}
+                      <div className={`w-1.5 h-1.5 bg-${feature.color}-400 rounded-full mr-2 flex-shrink-0`}></div>
+                      <span className="truncate">{feat}</span>
                     </div>
                   ))}
                 </div>
@@ -150,14 +151,14 @@ const HomeMainPage: React.FC = () => {
           ))}
         </div>
 
-        {/* 特色介绍 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
+        {/* 特色介绍 - 优化布局 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-6xl mx-auto px-4">
           <div className="text-center">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto mb-6 flex items-center justify-center">
               <span className="text-3xl">🤖</span>
             </div>
-            <h3 className="text-2xl font-semibold mb-4">AI智能优化</h3>
-            <p className="text-gray-600 leading-relaxed">
+            <h3 className="text-xl sm:text-2xl font-semibold mb-4">AI智能优化</h3>
+            <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
               基于大语言模型的内容优化，自动分析简历质量，提供个性化改进建议，让每份简历都脱颖而出
             </p>
           </div>
@@ -166,8 +167,8 @@ const HomeMainPage: React.FC = () => {
             <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-2xl mx-auto mb-6 flex items-center justify-center">
               <span className="text-3xl">🎯</span>
             </div>
-            <h3 className="text-2xl font-semibold mb-4">精准匹配</h3>
-            <p className="text-gray-600 leading-relaxed">
+            <h3 className="text-xl sm:text-2xl font-semibold mb-4">精准匹配</h3>
+            <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
               智能分析职位需求与个人背景，计算匹配度评分，识别技能差距，提供针对性的优化方案
             </p>
           </div>
@@ -176,8 +177,8 @@ const HomeMainPage: React.FC = () => {
             <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl mx-auto mb-6 flex items-center justify-center">
               <span className="text-3xl">📈</span>
             </div>
-            <h3 className="text-2xl font-semibold mb-4">全程指导</h3>
-            <p className="text-gray-600 leading-relaxed">
+            <h3 className="text-xl sm:text-2xl font-semibold mb-4">全程指导</h3>
+            <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
               从技能规划到面试准备，提供全方位职业发展指导，制定个性化学习路径，助力职业成长
             </p>
           </div>
@@ -190,51 +191,50 @@ const HomeMainPage: React.FC = () => {
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          {/* 公开页面 */}
-          <Route path="/" element={<HomeMainPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          
-          {/* 应用页面 */}
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/editor" element={<EditorPage />} />
-          <Route path="/editor/:id" element={<EditorPage />} />
-          <Route path="/career-chat" element={<CareerChatPage />} />
-          <Route path="/jobs" element={<JobsPage />} />
-          <Route path="/interview" element={<InterviewPage />} />
-          <Route path="/skills" element={<SkillsPage />} />
-          <Route path="/share/:id" element={<SharePage />} />
-          
-          {/* 404 页面 */}
-          <Route path="/404" element={<NotFoundPage />} />
-          <Route path="*" element={<Navigate to="/404" replace />} />
-        </Routes>
+      {/* 移除了包裹的div，让内容直接全屏 */}
+      <Routes>
+        {/* 公开页面 */}
+        <Route path="/" element={<HomeMainPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
         
-        {/* Toast 通知 */}
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
+        {/* 应用页面 */}
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/editor" element={<EditorPage />} />
+        <Route path="/editor/:id" element={<EditorPage />} />
+        <Route path="/career-chat" element={<CareerChatPage />} />
+        <Route path="/jobs" element={<JobsPage />} />
+        <Route path="/interview" element={<InterviewPage />} />
+        <Route path="/skills" element={<SkillsPage />} />
+        <Route path="/share/:id" element={<SharePage />} />
+        
+        {/* 404 页面 */}
+        <Route path="/404" element={<NotFoundPage />} />
+        <Route path="*" element={<Navigate to="/404" replace />} />
+      </Routes>
+      
+      {/* Toast 通知 */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
             style: {
-              background: '#363636',
-              color: '#fff',
+              background: '#10b981',
             },
-            success: {
-              style: {
-                background: '#10b981',
-              },
+          },
+          error: {
+            style: {
+              background: '#ef4444',
             },
-            error: {
-              style: {
-                background: '#ef4444',
-              },
-            },
-          }}
-        />
-      </div>
+          },
+        }}
+      />
     </Router>
   )
 }
