@@ -67,5 +67,4 @@
 [context.branch-deploy.environment]
   NODE_ENV = "development"
 
-[build]
-  functions = "apps/functions"
+ functions = "apps/functions"
